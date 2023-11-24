@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CartPole - Q Value Approximation & Q-Learning with Momentum RMSProp</title>
+	<meta property="og:image" content="https://avatars.githubusercontent.com/u/9919?s=200&v=4">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400&display=swap">
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'>  
+	<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+</head>
+<body>
+    <div id="container">
+        <div id="sidebar">
+
+            <div id="sidebar-content">
+                <ul style="list-style-type: none;">
+                    <li><a href="/index.html">Home</a></li>
+                    <li><a href="/projects.html">Projects</a></li>
+                    <li><a href="/info.html">About Me</a></li>
+                    <li><a href="/contact.html">Contact</a></li>
+                </ul>
+            </div>
+
+            <div id="sidebar-contact-icons">
+                <a href="https://www.linkedin.com/in/georgios-tsamis-799992212/">
+                    <i class='fa fa-linkedin-square' style="font-size:2em; margin-right:1em;"></i>
+                </a>
+
+                <a href="https://github.com/TsamisG">
+                    <i class='fa fa-github' style="font-size:2em; margin-right:1em;"></i>
+                </a>
+
+                <a href="mailto:tsamis.g@outlook.com">
+                    <i class='fa fa-envelope-square' style="font-size:2em;"></i>
+                </a>
+
+                
+            </div>
+            
+        </div>
+
+		<div id="content">
+			<h1>CartPole - Q Value Approximation & Q-Learning with Momentum RMSProp</h1>
+				<p>In this mini-project, the OpenAI's CartPole Gym environment is solved using
+					a Linear Regression model -enhanced with an RBF Kernel- to approximate the Q-Value.
+					Q-Learning is used as the Learning algorithm and Momentum RMSProp is used to assist
+					the learning convergence.</p>
+				<p> In this OpenAI's Gym environment, the classic control problem of the inverted pendulum
+					attached on a cart is posed. In fact, this environment corresponds to the version of the
+					cart-pole problem  described by Barto, Sutton, and Anderson in <a href="https://ieeexplore.ieee.org/document/6313077">
+					“Neuronlike Adaptive Elements That Can Solve Difficult Learning Control Problems”</a>.
+					A pole is attached by an un-actuated joint to a cart,
+					which moves along a frictionless track. The pendulum is placed upright on the cart and the goal is to
+					balance the pole by applying forces in the left and right direction on the cart.<br />
+					See more: 
+					<a href="https://www.gymlibrary.dev/environments/classic_control/cart_pole/"> Cart Pole - Gym Documentation</a></p>
+
+			<br />
+			<hr>
+			<br />
+			<h2>Analysis and Design</h2>
+						
+				<h3>The Environment</h3>
+				<p>In the CartPole environment, the agent is tasked with controlling the cart.
+					The state space contains the cart's position, the cart's velocity,
+					the pole's angle and the pole's angular velocity:
+					$$S = \{ x, v, \theta, \omega \}$$
+					The cart's position is bounded in \( [-4.8, 4.8] \) and the pole's angle is bounded in
+					\( [ \approx -0.418, \approx 0.418] \) (units in SI). However, the velocities are unbounded and can take
+					any real number as a value.<br />
+					The agent's possible actions are two discrete: push the cart to the left (0) and push the cart
+					to the right (1):
+					$$A = \{ 0, 1 \}$$
+					The goal is for the agent to balance the pole on the vertical position ( \( \theta = 0 \) )
+					for as long as possible. The episode is terminated when the pole's angle is greater than +/- 12 degrees
+					or the cart's position is greater than +/- 2.4.<br />
+					Each episode's reward is calculated as such: at each time step where the pole is upright
+					(angle close to zero) the agent receives +1 reward.
+				</p>
+
+				<h3>The Q-Value Approximation Model</h3>
+				<p>In order to implement a learning algorithm that will train the agent, a function that maps the state
+					and the action to the expected return (the Q-Value) is required. As the agent's actions are discrete,
+					a Linear Regression Model is used for each action; each model maps the state to a value for its
+					action. Preceding the Linear Regression models, a standard scaler is used to scale the state and
+					a RBF Kernel is used to transform the scaled state. The purpose is to allow the linear models
+					to capture the state space's non-linearities. To be more specific:
+					<ul>
+						<li>The state is standard scaled.</li>
+						<li>The scaled state is transformed into a vector of feature values, using a RBF Kernel.</li>
+						<li>The feature values are fed into the Linear Regression models.</li>
+						<li>Each model's output is the Q-Value for the input state and the model's action.</li>
+					</ul>
+					<br />
+					<figure>
+					<img src="/images/cartPole/modelDiagram.png"/>
+						<figcaption>Fig. 1 - Block Diagram of the Q Value Approximation Model.</figcaption>
+					</figure>
+				</p>
+				<br />
+				<p>
+					Before the training session begins, a number of state samples is gathered. This can be achieved by
+					utilizing the environment's observation_space.sample() method, which returns a random state. However,
+					this is not used in this case, as the cart's velocity and the pole's angular velocity are unbounded,
+					and the observation_space.sample() method may return infinitely large values, which are not representative
+					of the actual state space. Thus, artificial samples are used. For each observation, the numpy's
+					random.uniform() method is called, given the correct bounds. More specifically, the bounds used are:
+					<ul>
+						<li>For the cart's position: \( [-2.4, 2.4] \)</li>
+						<li>For the cart's velocity: \( [-2, 2] \)</li>
+						<li>For the poles's angle: \( [-0.2, 0.2] \)</li>
+						<li>For the pole's angular velocity: \( [-1, 1] \)</li>
+					</ul>
+					The samples are gathered using the gather_samples_s method in cell [3], which is called in cell [5].
+					<br />
+					<br />
+					The standard scaler and the RBF Kernel are fit onto the samples, meaning the scaler computes the mean
+					and the standard deviation and a predefined number of sample points are chosen as the feature exemplars
+					for the RBF Kernel.
+					The gamma value of the RBF Kernel is a hyperparameters to be chosen during the model's design
+					processes. In this case, the default value of \( \gamma = 1 \) is used, as the obervations are standard
+					scaled.
+					<br />
+					<br />
+					The linear model presented in <a href="linearRegression.html">"Linear Regression Model in Python"</a>
+					is implemented two times; one for each discrete action. The weights are zero-initialized but a random
+					initialization can also be applied, as it is not possible to define Optimistic Initial Values for this
+					specific case. The Standard Scaler, the Featurizer (the RBF Kernel) and
+					the Linear Regression models are instanced in cell [6].
+				</p>
+				<h3>The Learning Algorithm - Q-Learning</h3>
+				<p>
+					The Q-Learning algorithm is implemented for the agent's learning. Q-Learning implements the following
+					Q-Value update, implemented using Stochastic Gradient Descent:
+					
+					<div class="container" style="height: 5em; width: 100%;">
+						$$ Q(s,a) \leftarrow Q(s,a) + \alpha (r + \gamma \ \text{max}_{a_2} Q(s_2, a_2) - Q(s,a)) $$
+					</div>
+					The agent chooses the next action using the Epsilon-Greedy policy of the argmax of the Q-Values of the
+					state, over the two possible actions. The Epsilon-Greedy policy helps the agent explore new combinations
+					of states and actions.
+					<br />
+					<br />
+					At each training episode, the environment is reset. Then, at each agent's step, the two linear models
+					predict a Q-Value corresponding to the state. The argmax of the predictions over the actions is used
+					in the Epsilon-Greedy method to choose the next action. The agent takes a step in the environment using
+					the selected action. By obtaining the step's reward, the return is calculated and the algorithm takes
+					a gradient step to update the corresponding model's parameters (weights and bias). This procedure is
+					repeated for the number of training episodes.<br />
+					To assist the models' convergence, the RMSProp optimizer is implemented with Momentum. Using the default
+					Stochastic Gradient Descent, the update rule is: 
+					$$ W \leftarrow W - \alpha \nabla _W Loss $$
+					Where by default, the root squared error is used:
+					$$ Loss = \frac{1}{2} (Q - \hat{Q})^2 $$
+					The gradient descent update step for each model's weights becomes:
+					$$ \text{cache}_W \leftarrow d\ \text{cache}_W + (1-d) \nabla _W ^2 Loss $$
+					$$ v_W \leftarrow \mu v_W + (1- \mu) \alpha \frac{\nabla _W Loss}{\sqrt{\text{cache}_W} + \epsilon}$$
+					$$ W \leftarrow W - v_W$$
+					The importance of the Momentum RMSProp is displayed later in this project, where a comparison
+					between default SGD and Momentum RMSProp is shown. The learning procedure is implemented in cell [7].
+					The caches and the v's are zero-initialized.
+				</p>
+
+				<h3>Hyperparameter Selection</h3>
+				<p>
+					As in most machine learning problems, the hyperparameters' tuning problem is posed. For this case,
+					the algorithm's designer may approach the solution by experimenting with different hyperparameter values.
+					The settings used in this case are briefly presented below:
+					<ul>
+						<li>Maximum Steps per Episode: Set to 1000. For this case this parameter does not really affect
+							the agent's performance, as the agent will be trained to keep the pole balanced for as long
+							as possible. It can be arbitrarily selected.</li>
+						<li>Number of Samples: Set to 200000. A small sample size will lead to poor scaler and featurizer.
+							A large sample size may be uneccessary and computationally heavy.</li>
+						<li>Number of Features of the RBF Kernel: Set to 400. Has to be large enough to capture the state-space's
+							non-linearities. Large values lead to heavier Linear Regression models.</li>
+						<li>Number of Training Episodes: Set to 200. The training episodes have to be enough to let
+							the agent train. Values higher than needed will lead to uneccessary long training sessions.</li>
+						<li>Discount Factor - \( \gamma \): Set to 1. For this case, no discounting is considered,
+							as the agent should be trained to place emphasis on long-term rewards (the total reward).</li>
+						<li>Epsilon-Greedy Value - \( \epsilon \): Set to 0.08. This corresponds to a 8%
+							chance that the agent chooses an action randomly.</li>
+						<li>Learning Rate - \( \alpha \): Set to 0.1. Small learning rates will lead to longer training
+							sessions, as Stochastic Gradient Descent is used. Large learning rates will lead to overshooting
+							and missing the minimum. In this case, the Momentum RMSProp assists the gradient step.
+						<li>Momentum - \( \mu \): Set to 0.99. Values close to 1 means that the learning procedure
+							shifts the balance towards past v values more than the current gradient.</li>
+						<li>Decay Factor - d: Set to 0.99.</li>
+					</ul>
+				</p>
+
+				<br />
+				<hr>
+				<br />
+
+				<h2>Python Implementation in Jupyter Notebook</h2>
+					<div class="container" style="height: 100vh; width: 100%;">
+						<iframe src="/images/cartPole/CartPole_RBFLinearRegression_QLearning.html"
+						style="height: 100%; width: 300%;"></iframe>
+					</div>
+
+				<br />
+				<hr>
+				<br />
+				<h2>Results</h2>
+
+					<p>The trained agent is tested in a new environment (See cell [11] above). During the testing
+						episode, the agent chooses the next action greedily, using the argmax of the estimated Q Values. The
+						Epsilon-Greedy policy is not needed in the testing episode as there is no need for exploration - the
+						agent's models will not be updated.
+						The agent keeps the pole balanced for the maximum number of steps and thus obtains a total reward
+						of 1000.
+						The result is displayed in the animation below. The animation is created by saving the frame of each step in
+						cell [11]. The frames are then saved into a gif file using the Pillow library in cell [12].
+					</p>
+					<figure>
+						<img src="/images/cartPole/CartPoleTesting.gif"/>
+						<figcaption>Fig. 2 - The agent's performance in a testing episode.</figcaption>
+					</figure>
+					<br />
+					<p>As the reward-per-episode plot is choppy due to the stochasticity of the agent's spawn
+						and the epsilon-greedy policy, the running average reward plot is prefered. In addition, the goal is to train
+						the agent to have a better "average" performance, meaning that in some episodes, the agent may perform
+						better than others. Thus, the running average reward plot contains more useful information
+						than the reward-per-episode plot. As it is shown, the average reward of the agent increases during
+						the training.
+					</p>
+					<figure>
+						<img src="/images/cartPole/runningAvg.png" style="height: 20em"/>
+						<figcaption>Fig. 3 - The running average reward over the training episodes.</figcaption>
+					</figure>
+					<br />
+
+					<p>An interesting plot is displayed below; the visualization of the Value function for
+						different values of the cart's position and the pole's angle. As the state space is four-dimensional,
+						the Value function cannot be visualized. However, a "slice" of this hyperspace can be visualized by
+						assuming constant values for two of the four states; in this case the cart's velocity and the pole's
+						angular velocity. The result can be seen below. The velocities are assumed small: 0.1 for the cart's
+						velocity and -0.05 for the pole's angular velocity. As it can be seen, the Value takes the maximum value
+						near the center of the state plane. This makes sense, as at the center of the state plane, the agent has
+						the maximum room for any action without ending the episode, while for states closer to the bounds, the
+						Value is small, as the episode may end soon.
+					</p>
+					<figure>
+						<img src="/images/cartPole/valueFunction.png" style="height: 20em"/>
+						<figcaption>Fig. 4 - The approximated Value function for different values of the cart's position
+							and the pole's angle.</figcaption>
+					</figure>
+					<br />
+
+					<h3>The effect of the Discount factor - \( \gamma \)</h3>
+
+					<p>
+						In this section, the effect of the discount factor \( \gamma \) is showcased. For this purpose, two agents
+						were trained; one with \( \gamma \) = 1 and one with \( \gamma \) = 0.99. The two agents share the same
+						scaler and featurizer and hyperparameter settings. Both of the agents were trained for 200 episodes. The
+						agents' performances are compared using the same initialization on the testing environment. In Fig. 5,
+						the animation of the performance for each agent is displayed. As it is clear, the agent that was trained
+						with discounting, takes more "violent" actions, as it is sortsighted. The agent that was trained with no
+						discounting, takes more "conservative" actions, leading to it keeping the pole vertical for longer periods.
+						This is confirmed in Fig. 6, where the pole's absolute angle per step for each agent is plotted.
+					</p>
+					<figure>
+						<div class="image-container" style="width:45%;display: inline-block; margin-right: 4%;" >
+							<h4>\( \gamma = 1 \)</h4>
+							<img src="/images/cartPole/CartPoleTesting_1.gif" alt="Gamma 1">
+						</div>
+					
+						<div class="image-container" style="width:45%;display: inline-block; margin-left: 4%;">
+							<h4>\( \gamma = 0.99 \)</h4>
+							<img src="/images/cartPole/CartPoleTesting_2.gif" alt="Gamma 0.99">
+						</div>
+						<figcaption>Fig. 5 - The performance of the agent that was trained with no discounting is more desirable as it keeps the pole vertical and takes smoother actions.</figcaption>
+					</figure>
+					<br />
+
+					<figure>
+						<img src="/images/cartPole/theta.png" style="height: 20em"/>
+						<figcaption>Fig. 6 - The absolute angle of the pole of each agent per episode step.</figcaption>
+					</figure>
+					<br />
+					<h3>The Importance of Momentum RMSProp</h3>
+					<p>
+						In this section, the effect of the Momentum RMSProp optimizer has on the learning convergence is showcased.
+						In fact, for this comparison, two different agents were trained. Using the same hyperparameter settings,
+						the only difference between the two was the optimizer algorithm. The first was trained using the default SGD
+						and the other was trained using Momentum RMSProp as shown in previous section. The result can be seen in Fig. 7.
+						As it is shown, the Momentum RMSProp optimizer assists the second agent to converge much faster.
+						<figure>
+							<img src="/images/cartPole/SGDvRMSProp.png" style="height: 20em"/>
+							<figcaption>Fig. 6 - The angle of the pole of each agent per episode step.</figcaption>
+						</figure>
+					</p>
+
+					<h3>Final Thoughts</h3>
+					<p>
+						The methodology used in this mini-project successfully solves the CartPole environment offered by OpenAI's
+						Gym library. It was confirmed that a linear model enhanced with a RBF Kernel can be powerful enough
+						to approximate non-linear functions such as the Q-Value function for this case. The importance of choosing
+						the correct discounting factor was also shown, along with the importance of implementing imporved
+						Gradient-Descent algorithms for faster training convergence, such as the RMSProp with Momentum.
+					</p>
+
+
+
+				<h2>References</h2>
+					<p>Watkins, C.J., Dayan, P. (1992) Technical Note: Q-Learning. Machine Learning 8, 279–292.
+					<p>Moody, J. and Darken, C.J. (1989) Fast Learning in Networks of Locally-Tuned Processing Units. Neural Computation, 1, 281-294.</p>
+					<p>Tokic, Michel. (2010). Adaptive ε-Greedy Exploration in Reinforcement Learning Based on Value Differences. 203-210. 10.1007/978-3-642-16111-7_23. </p>
+					<p>Sutton, R. S., & Barto, A. G. (1998). Reinforcement Learning: An Introduction (1st ed.). MIT Press.</p>
+					<p>Ruder, S. (2016). An overview of gradient descent optimization algorithms. arXiv preprint arXiv:1609.04747.</p>
+
+				<br />
+				<hr>
+				<br />
+				<a href="/projects.html" class="button">Back to Projects</a>
+				<br />
+				<br />
+	
+	</div>
+
+	</body>
+</html>

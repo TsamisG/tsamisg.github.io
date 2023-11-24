@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Network Model in Python</title>
+	<meta property="og:image" content="https://avatars.githubusercontent.com/u/9919?s=200&v=4">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400&display=swap">
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'>  
+	<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+</head>
+<body>
+    <div id="container">
+        <div id="sidebar">
+
+            <div id="sidebar-content">
+                <ul style="list-style-type: none;">
+                    <li><a href="/index.html">Home</a></li>
+                    <li><a href="/projects.html">Projects</a></li>
+                    <li><a href="/info.html">About Me</a></li>
+                    <li><a href="/contact.html">Contact</a></li>
+                </ul>
+            </div>
+
+            <div id="sidebar-contact-icons">
+                <a href="https://www.linkedin.com/in/georgios-tsamis-799992212/">
+                    <i class='fa fa-linkedin-square' style="font-size:2em; margin-right:1em;"></i>
+                </a>
+
+                <a href="https://github.com/TsamisG">
+                    <i class='fa fa-github' style="font-size:2em; margin-right:1em;"></i>
+                </a>
+
+                <a href="mailto:tsamis.g@outlook.com">
+                    <i class='fa fa-envelope-square' style="font-size:2em;"></i>
+                </a>
+
+                
+            </div>
+            
+        </div>
+
+		<div id="content">
+			<h1>Neural Network Model in Python</h1>
+				<p>In this project, an Artifical Neural Network model is created from scratch in Python.
+					The model is programmed as a callable object in a simple form, so it can be used easily in
+					any project. The object will give the user the opportunity to choose the network's architecture
+					and activation functions, or change other hyperparameters such as the learning rate. The input and output
+					data are assumed to be 2D arrays. The final python file can be found in my github repository
+					<a href="https://github.com/TsamisG/machineLearningModels"> machineLearningModels</a>.
+				</p>
+				<p> A neural network is a computational model inspired by the structure and function of the
+					human brain. It consists of interconnected nodes, or artificial neurons, organized in layers. These
+					layers typically include an input layer, one or more hidden layers, and an output layer. Each connection
+					between neurons has a weight that determines the strength of the connection. During training, the network
+					learns to adjust these weights based on input data and corresponding output, optimizing its performance
+					on a specific task, such as image recognition or natural language processing.<br />
+
+			<br />
+			<hr>
+			<br />
+			<h2>Project Breakdown</h2>
+				<p>
+					This project is organized in five sections:
+					<ul>
+						<li>The Layer Object: Programming a callable object that represents a single layer of neurons.</li>
+						<li>The ANNClassification Object: Programming a simple feedforward neural network model in the form
+							of a callable object, composed of a series of Layer objects, used for classification cases.</li>
+						<li>The ANNRegression Object: Programming a simple feedforward neural network model in the form
+							of a callable object, composed of a series of Layer objects, used for regression cases.</li>
+						<li>A Classification Test Case: Using the ANNClassification object in a classification example case.</li>
+						<li>A Regression Test Case: Using the ANNRegression object in a classification example case.</li>
+					</ul>
+				</p>
+
+					<h2>Setup</h2>
+						<p>
+							Before the first section, the required modules and tools are inserted and 
+							some useful functions are defined.
+							<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">numpy</span> <span style="color: #008800; font-weight: bold">as</span> <span style="color: #0e84b5; font-weight: bold">np</span>
+<span style="color: #008800; font-weight: bold">from</span> <span style="color: #0e84b5; font-weight: bold">sklearn.utils</span> <span style="color: #008800; font-weight: bold">import</span> shuffle
+</pre></div>
+
+							<ul>
+								<li>Weights and bias initialization: It implements Xavier-Glorot weight initialization and zero
+									-bias initialization.
+								</li>
+								<li>The sigmoid function: The typical sigmoid function: \( \sigma (a) = \frac{1}{1 + e^{-a}} \)</li>
+							</ul>
+							<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">init_weight_and_bias</span>(M1, M2):
+    W <span style="color: #333333">=</span> np<span style="color: #333333">.</span>random<span style="color: #333333">.</span>randn(M1, M2) <span style="color: #333333">/</span> np<span style="color: #333333">.</span>sqrt(M1)
+    b <span style="color: #333333">=</span> np<span style="color: #333333">.</span>zeros(M2)
+    <span style="color: #008800; font-weight: bold">return</span> W<span style="color: #333333">.</span>astype(np<span style="color: #333333">.</span>float32), b<span style="color: #333333">.</span>astype(np<span style="color: #333333">.</span>float32)
+
+<span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">sigmoid</span>(x):
+    <span style="color: #008800; font-weight: bold">return</span> <span style="color: #6600EE; font-weight: bold">1.</span> <span style="color: #333333">/</span> (<span style="color: #6600EE; font-weight: bold">1.</span> <span style="color: #333333">+</span> np<span style="color: #333333">.</span>exp(<span style="color: #333333">-</span>x))
+</pre></div>
+
+						</p>
+					
+
+					<h2>The Layer Object</h2>
+
+						<p>
+							The Layer object is programmed in a modular fashion. For the object initialization method,
+							the dimensions of the weights' array are required, as well as the layer's activation function
+							and a boolean that is true if the layer is the last in the neural network (set by default to False).
+							In the initialization method, the layer's weights and bias values are initialized using the
+							init_weight_and_bias method. The Layer object includes caches for W and b, and first and second
+							moment estimates. This means that the Layer object can be used with RMSProp and Adam, in addition
+							to the classic Gradient Descent optimizer.
+						</p>
+						<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-weight: bold">class</span> <span style="color: #BB0066; font-weight: bold">Layer</span>:
+    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">__init__</span>(<span style="color: #007020">self</span>, M1, M2, act_fun, islast<span style="color: #333333">=</span><span style="color: #007020">False</span>):
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>islast <span style="color: #333333">=</span> islast
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>act_fun <span style="color: #333333">=</span> act_fun
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>M1 <span style="color: #333333">=</span> M1
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>M2 <span style="color: #333333">=</span> M2
+	W, b <span style="color: #333333">=</span> init_weight_and_bias(M1, M2)
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>W <span style="color: #333333">=</span> W
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>b <span style="color: #333333">=</span> b
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>cacheW <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">0</span>
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>cacheb <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">0</span>
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>mW <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">0</span>
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>mb <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">0</span>
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>vW <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">0</span>
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>vb <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">0</span>
+</pre></div>
+
+						<p>
+							The Layer object includes two additional methods: The forward method and the grad method.<br />
+							The forward method includes a simple linear calculation of the layer's activation. Then, the activation
+							values are passed through the given activation function:
+							$$ a = X \cdot W + b $$
+							$$ Z = f(a) $$
+							The variable "a" is reused instead of a new Z variable to save memory.
+						</p>
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">forward</span>(<span style="color: #007020">self</span>, X):
+	a <span style="color: #333333">=</span> X<span style="color: #333333">.</span>dot(<span style="color: #007020">self</span><span style="color: #333333">.</span>W) <span style="color: #333333">+</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>b
+	<span style="color: #008800; font-weight: bold">if</span> <span style="color: #000000; font-weight: bold">not</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>islast:
+	    <span style="color: #008800; font-weight: bold">if</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>act_fun <span style="color: #333333">==</span> <span style="background-color: #fff0f0">&#39;relu&#39;</span> :
+		a[a <span style="color: #333333">&lt;</span> <span style="color: #0000DD; font-weight: bold">0</span>] <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">0</span>
+	    <span style="color: #008800; font-weight: bold">elif</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>act_fun <span style="color: #333333">==</span><span style="background-color: #fff0f0">&#39;sigmoid&#39;</span>:
+		a <span style="color: #333333">=</span> sigmoid(a)
+	<span style="color: #008800; font-weight: bold">return</span> a
+</pre></div>
+
+						<p>
+							The grad method calculates the gradients of the Loss with respect to W and b,
+							given the error \( \delta \). In this project, the loss functions considered are:
+							<ul>
+								<li>The sum of square errors for regression</li>
+								<li>The cross-entropy loss for classification</li>
+							</ul>
+							For a single layer, it can be proven that for both of these losses:
+							$$ \nabla _W J = X^T \left( \hat{Y} - Y \right)$$ 
+							$$ \nabla _b J = \sum _{i=1}^N \left( \hat{y_i} - y_i \right)$$ 
+							This formula can be generalized into the following one, for an arbitrary layer \( l \):
+							$$ \nabla _W^{(l)} J = Z^{(l-1)T} \delta^{(l)} $$
+							$$ \nabla _b^{(l)} J = \sum _{i=1}^N \delta_i ^{(l)} $$
+							For the last layer:
+							$$ \delta^{(L)} = \hat{Y} - Y $$
+							For the rest of the layers:
+							$$ \delta ^{(l)} = \left( \delta ^{(l+1)} W^{(l+1)T} \right) Z^{(l)\prime}$$
+							Where \( Z^{(l)\prime} \) is the derivative of the activation function of the \( (l) \) layer. For
+							the two implemented functions:
+							<ul>
+								<li>ReLU: \( Z_i^{(l)\prime} = 1, \text{if} \ Z_i^{(l)} > 0, \text{else} \ 0\)</li>
+								<li>Sigmoid: \( Z^{(l)\prime} = \sigma (Z^{(l)}) \left( 1 - \sigma (Z^{(l)}) \right) \)</li>
+							</ul>
+							In this sense, in the grad method, if the layer is the last one, the delta is the one given (\( \hat{Y} - Y \)).
+							Else, for any other layer, the new delta is calculated from the weights of the next layer, and the derivative
+							of the activation function (dZ). Then the grad method returns \( \nabla _W^{(l)} J, \nabla _b^{(l)} J, \delta^{(l)} \).
+						</p>
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">grad</span>(<span style="color: #007020">self</span>, delta, Z_prev, Z<span style="color: #333333">=</span><span style="color: #007020">None</span>, W_next<span style="color: #333333">=</span><span style="color: #0000DD; font-weight: bold">0</span>):
+	<span style="color: #008800; font-weight: bold">if</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>islast:
+	    delta <span style="color: #333333">=</span> delta
+	<span style="color: #008800; font-weight: bold">else</span>:
+	    <span style="color: #008800; font-weight: bold">if</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>act_fun <span style="color: #333333">==</span> <span style="background-color: #fff0f0">&#39;relu&#39;</span> :
+		dZ <span style="color: #333333">=</span> Z <span style="color: #333333">&gt;</span> <span style="color: #0000DD; font-weight: bold">0</span>
+	    <span style="color: #008800; font-weight: bold">elif</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>act_fun <span style="color: #333333">==</span><span style="background-color: #fff0f0">&#39;sigmoid&#39;</span>:
+		dZ <span style="color: #333333">=</span> sigmoid(Z) <span style="color: #333333">*</span> (<span style="color: #0000DD; font-weight: bold">1</span> <span style="color: #333333">-</span> sigmoid(Z))
+	    delta <span style="color: #333333">=</span> (delta<span style="color: #333333">.</span>dot(W_next<span style="color: #333333">.</span>T)) <span style="color: #333333">*</span> dZ
+	<span style="color: #008800; font-weight: bold">return</span> Z_prev<span style="color: #333333">.</span>T<span style="color: #333333">.</span>dot(delta), delta<span style="color: #333333">.</span>sum(axis<span style="color: #333333">=</span><span style="color: #0000DD; font-weight: bold">0</span>), delta
+</pre></div>
+
+
+						<br />
+					<h2>The ANNClassification Object</h2>
+
+						<p>
+							The ANNClassification object is basically a collection of Layer objects. It also incorporates fit methods,
+							to learn from data and adjust each layer's parameters. To initialize the ANNClassification object,
+							the input layer size, the output layer size, and the hidden layers' sizes are required. The model's
+							hyperparameters such as the learning rate, or the L2 regularization coefficient are given some default
+							values. If the verbose variable is set to true, then the learning progress is printed
+							during the training session.<br />
+							The neural network object includes an instance "layers", which is actually a list. Then, for the number of
+							total layers, a Layer object is instanced in a loop and is appended in the "layers" list. Then, after the
+							loop, a "last" layer is appended for the output layer. The "t" variable of the model, is needed for
+							the Adam optimizer implementation.
+						</p>
+						<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-weight: bold">class</span> <span style="color: #BB0066; font-weight: bold">ANNClassification</span>:
+    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">__init__</span>(<span style="color: #007020">self</span>, input_size, output_size, hidden_layer_sizes, learning_rate<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">1e-04</span>, reg<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">0.1</span>,
+		epochs<span style="color: #333333">=</span><span style="color: #0000DD; font-weight: bold">400</span>, batch_size<span style="color: #333333">=</span><span style="color: #0000DD; font-weight: bold">10</span>, act_fun<span style="color: #333333">=</span><span style="background-color: #fff0f0">&#39;relu&#39;</span>, verbose<span style="color: #333333">=</span><span style="color: #007020">True</span>):
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">=</span> learning_rate
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>reg <span style="color: #333333">=</span> reg
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>epochs <span style="color: #333333">=</span> epochs
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>batch_size <span style="color: #333333">=</span> batch_size
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>hidden_layer_sizes <span style="color: #333333">=</span> hidden_layer_sizes
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>act_fun <span style="color: #333333">=</span> act_fun
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>verbose <span style="color: #333333">=</span> verbose
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers <span style="color: #333333">=</span> []
+	K <span style="color: #333333">=</span> output_size
+	M1 <span style="color: #333333">=</span> input_size
+	<span style="color: #008800; font-weight: bold">for</span> M2 <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>hidden_layer_sizes:
+	    h <span style="color: #333333">=</span> Layer(M1, M2, <span style="color: #007020">self</span><span style="color: #333333">.</span>act_fun)
+	    <span style="color: #007020">self</span><span style="color: #333333">.</span>layers<span style="color: #333333">.</span>append(h)
+	    M1 <span style="color: #333333">=</span> M2
+	h <span style="color: #333333">=</span> Layer(M1, K, <span style="color: #007020">self</span><span style="color: #333333">.</span>act_fun, islast<span style="color: #333333">=</span><span style="color: #007020">True</span>)
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers<span style="color: #333333">.</span>append(h)
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>t <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">0</span>
+	</pre></div>
+						<br />
+						<p>
+							First, the "forward" method is implemented. This method forward-passes the input data X through all
+							of the model's layers and appends the output of each layer \( Z^{(l)} \) in the "Z" list. At the end,
+							it passes the output of the output layer through the softmax function:
+							$$ p_{Y, j} = \frac{e^a_j}{\sum_{k=1}^K e^a_k} $$
+							The "forward" method returns the model's output and the list containing all of the layers' outputs.
+						</p>
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">forward</span>(<span style="color: #007020">self</span>, X):
+	Z <span style="color: #333333">=</span> [X]
+	<span style="color: #008800; font-weight: bold">for</span> h <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[:<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]:
+	    Z<span style="color: #333333">.</span>append(h<span style="color: #333333">.</span>forward(Z[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]))
+	
+	a <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>forward(Z[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>])
+	pY <span style="color: #333333">=</span> np<span style="color: #333333">.</span>exp(a)
+	pY <span style="color: #333333">=</span> pY <span style="color: #333333">/</span> np<span style="color: #333333">.</span>sum(pY, axis<span style="color: #333333">=</span><span style="color: #0000DD; font-weight: bold">1</span>, keepdims<span style="color: #333333">=</span><span style="color: #007020">True</span>)
+	<span style="color: #008800; font-weight: bold">return</span> pY, Z
+</pre></div>
+						<br />
+						<p>
+							For the ANNClassification object, the loss function implements the Cross-Entropy Loss:
+							$$ \text{Loss} = - \sum_{i=1}^N y_i log(p_{y,i}) $$
+						</p>
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">loss</span>(<span style="color: #007020">self</span>, Y, pY):
+	loss <span style="color: #333333">=</span> Y<span style="color: #333333">*</span>np<span style="color: #333333">.</span>log(pY)
+	<span style="color: #008800; font-weight: bold">return</span> <span style="color: #333333">-</span>loss<span style="color: #333333">.</span>sum()
+</pre></div>
+						<br/>
+						<p>
+							The model's "predict" method outputs the one-hot encoded class prediction for the given input.
+							It basically forward-passes the given input using the "forward" method to get the network's softmax
+							output, and then it rounds the class probabilities to 0 or to 1 to get the one-hot encoded class prediction.
+						</p>
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">predict</span>(<span style="color: #007020">self</span>, X):
+	pY, _ <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(X)
+	<span style="color: #008800; font-weight: bold">return</span> np<span style="color: #333333">.</span>round(pY)
+</pre></div>
+						<br />
+						<p>
+							A "classification_rate" method is also implemented, that calculates the classification rate
+							of the model, given a dataset X, Y as the mean correct predictions.
+						</p>
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">classification_rate</span>(<span style="color: #007020">self</span>, X, Y):
+	pred <span style="color: #333333">=</span> np<span style="color: #333333">.</span>argmax(<span style="color: #007020">self</span><span style="color: #333333">.</span>predict(X), axis<span style="color: #333333">=</span><span style="color: #0000DD; font-weight: bold">1</span>)
+	Y <span style="color: #333333">=</span> np<span style="color: #333333">.</span>argmax(Y, axis<span style="color: #333333">=</span><span style="color: #0000DD; font-weight: bold">1</span>)
+	<span style="color: #008800; font-weight: bold">return</span> np<span style="color: #333333">.</span>mean(pred <span style="color: #333333">==</span> Y)
+</pre></div>
+
+						<br />
+						<p>
+							The family of "fit" methods included in the ANNClassification object expect the user to provide
+							the data as:
+							<ul>
+								<li>\( X, X_{\text{val}} \): Standard scaled, 2D arrays</li>
+								<li>\( Y, Y_{\text{val}} \): One-hot encoded labels in 2D arrays</li>
+							</ul>
+							First of all, the standard single-step Gradient Descent method is implemented as "partial_fit".
+							This method, first forward passes the input data X, to derive the output of each layer. Then, for the output
+							layer and for all the other layers, the model's weights and bias values are updated by taking a single
+							gradient step. The "delta" errors are backpropagated using a for loop, starting from the last layer
+							and iterating to the first one.
+						</p>
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">partial_fit</span>(<span style="color: #007020">self</span>, X, Y):
+	Yhat, Z <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(X)
+        
+	delta <span style="color: #333333">=</span> Yhat<span style="color: #333333">-</span>Y
+	gradW, gradb, delta <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>grad(delta, Z[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>])
+	
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> (gradW <span style="color: #333333">+</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>reg<span style="color: #333333">*</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W)
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> gradb
+	
+	<span style="color: #008800; font-weight: bold">for</span> i <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #007020">len</span>(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers)<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">2</span>,<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>,<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>):
+		gradW, gradb, delta <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>grad(delta, Z[i], Z<span style="color: #333333">=</span>Z[i<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>], W_next<span style="color: #333333">=</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> (gradW <span style="color: #333333">+</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>reg<span style="color: #333333">*</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>W)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> gradb
+</pre></div>
+						<br />
+						<p>
+							In a similar fashion, the "partial_fit" methods for the RMSProp and the Adam optimizers are implemented.
+							For the RMSProp, the parameters update rule is as follows:
+							<div class="container" style="height: 5em; width: 100%;">
+							$$ \text{cache}_W = \text{decay} \cdot \text{cache}_W + (1 - \text{decay}) \cdot \left( \nabla _W \right)^2 $$
+							$$ \text{cache}_b = \text{decay} \cdot \text{cache}_b + (1 - \text{decay}) \cdot \left( \nabla _b \right)^2 $$
+							</div>
+							$$ v_W = \mu \cdot v_W + (1-\mu) \alpha \frac{\nabla _W + l_2 \cdot W}{\sqrt{\text{cache}_W}+\epsilon} $$
+							$$ v_b = \mu \cdot v_b + (1-\mu) \alpha \frac{\nabla _b}{\sqrt{\text{cache}_b}+\epsilon} $$
+							$$ W = W - v_W $$
+							$$ b = b - v_b $$
+							
+						</p>
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">partial_fit_RMSProp</span>(<span style="color: #007020">self</span>, X, Y, decay<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">0.99</span>, mu<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">0.9</span>):
+	eps <span style="color: #333333">=</span> <span style="color: #6600EE; font-weight: bold">1e-08</span>
+	Yhat, Z <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(X)
+	delta <span style="color: #333333">=</span> Yhat<span style="color: #333333">-</span>Y
+	gradW, gradb, delta <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>grad(delta, Z[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>])
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>cacheW <span style="color: #333333">=</span> decay <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>cacheW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>decay) <span style="color: #333333">*</span> gradW <span style="color: #333333">*</span> gradW
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>cacheb <span style="color: #333333">=</span> decay <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>cacheb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>decay) <span style="color: #333333">*</span> gradb <span style="color: #333333">*</span> gradb
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vW <span style="color: #333333">=</span> mu <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>mu) <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> (gradW <span style="color: #333333">+</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>reg<span style="color: #333333">*</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W) <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>cacheW) <span style="color: #333333">+</span> eps)
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vb <span style="color: #333333">=</span> mu <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>mu) <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> gradb <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>cacheb) <span style="color: #333333">+</span> eps)
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vW
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vb
+	
+	<span style="color: #008800; font-weight: bold">for</span> i <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #007020">len</span>(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers)<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">2</span>,<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>,<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>):
+		gradW, gradb, delta <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>grad(delta, Z[i], Z<span style="color: #333333">=</span>Z[i<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>], W_next<span style="color: #333333">=</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>cacheW <span style="color: #333333">=</span> decay <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>cacheW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>decay) <span style="color: #333333">*</span> gradW <span style="color: #333333">*</span> gradW
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>cacheb <span style="color: #333333">=</span> decay <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>cacheb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>decay) <span style="color: #333333">*</span> gradb <span style="color: #333333">*</span> gradb
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vW <span style="color: #333333">=</span> mu <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>mu) <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> (gradW <span style="color: #333333">+</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>reg<span style="color: #333333">*</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>W) <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>cacheW) <span style="color: #333333">+</span> eps)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vb <span style="color: #333333">=</span> mu <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>mu) <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> gradb <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>cacheb) <span style="color: #333333">+</span> eps)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vW
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vb
+</pre></div>
+						<br />
+						<p>
+							For the Adam optimizer, the parameters update rule is as follows:
+							$$ m_W = \beta _1 \cdot m_W + (1-\beta _1) \cdot \nabla _W $$
+							$$ m_b = \beta _1 \cdot m_b + (1-\beta _1) \cdot \nabla _b $$
+							$$ v_W = \beta _2 \cdot v_W + (1-\beta _2) \cdot (\nabla _W)^2 $$
+							$$ v_b = \beta _2 \cdot v_b + (1-\beta _2) \cdot (\nabla _b)^2 $$
+							$$ \hat{m_W} = \frac{m_W}{1-\beta _1^t} $$
+							$$ \hat{m_b} = \frac{m_b}{1-\beta _1^t} $$
+							$$ \hat{v_W} = \frac{v_W}{1-\beta _2^t} $$
+							$$ \hat{v_b} = \frac{v_b}{1-\beta _2^t} $$
+							$$ W = W - \alpha \frac{\hat{m_W}}{\sqrt{\hat{v_W}} + \epsilon} $$
+							$$ b = b - \alpha \frac{\hat{m_b}}{\sqrt{\hat{v_b}} + \epsilon} $$
+						</p>
+
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">partial_fit_Adam</span>(<span style="color: #007020">self</span>, X, Y, beta1<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">0.9</span>, beta2<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">0.999</span>):
+	eps <span style="color: #333333">=</span> <span style="color: #6600EE; font-weight: bold">1e-08</span>
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>t <span style="color: #333333">+=</span> <span style="color: #0000DD; font-weight: bold">1</span>
+	Yhat, Z <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(X)
+
+	delta <span style="color: #333333">=</span> Yhat<span style="color: #333333">-</span>Y
+	gradW, gradb, delta <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>grad(delta, Z[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>])
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>mW <span style="color: #333333">=</span> beta1 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>mW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1) <span style="color: #333333">*</span> gradW
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>mb <span style="color: #333333">=</span> beta1 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>mb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1) <span style="color: #333333">*</span> gradb
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vW <span style="color: #333333">=</span> beta2 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2) <span style="color: #333333">*</span> gradW <span style="color: #333333">*</span> gradW
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vb <span style="color: #333333">=</span> beta2 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2) <span style="color: #333333">*</span> gradb <span style="color: #333333">*</span> gradb
+	mW_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>mW <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+	mb_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>mb <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+	vW_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vW <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+	vb_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vb <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> mW_hat <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(vW_hat) <span style="color: #333333">+</span> eps)
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> mb_hat <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(vb_hat) <span style="color: #333333">+</span> eps)
+	
+	<span style="color: #008800; font-weight: bold">for</span> i <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #007020">len</span>(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers)<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">2</span>,<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>,<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>):
+		gradW, gradb, delta <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>grad(delta, Z[i], Z<span style="color: #333333">=</span>Z[i<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>], W_next<span style="color: #333333">=</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>mW <span style="color: #333333">=</span> beta1 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>mW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1) <span style="color: #333333">*</span> gradW
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>mb <span style="color: #333333">=</span> beta1 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>mb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1) <span style="color: #333333">*</span> gradb
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vW <span style="color: #333333">=</span> beta2 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2) <span style="color: #333333">*</span> gradW <span style="color: #333333">*</span> gradW
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vb <span style="color: #333333">=</span> beta2 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2) <span style="color: #333333">*</span> gradb <span style="color: #333333">*</span> gradb
+		mW_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>mW <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+		mb_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>mb <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+		vW_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vW <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+		vb_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vb <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> mW_hat <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(vW_hat) <span style="color: #333333">+</span> eps)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> mb_hat <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(vb_hat) <span style="color: #333333">+</span> eps)
+</pre></div>
+					<br />
+					<p>
+						The "fit_GD" method implements mini-batch Stochastic Gradient Descent. It requires the training dataset X, Y
+						and the validation dataset Xval, Yval. It first shuffles the training dataset and
+						then calculates the total number of batches. Then, using a loop for all the training epochs and a loop for
+						all the mini-batches, the model's parameters are updated using the datapoints of the corresponding mini-batch,
+						using standard gradient descent. If the "verbose" variable is true, the method informs the user about
+						the progress of the learning session by printing the number of epoch, the training loss, the validation loss
+						and the classification rate of the validation dataset.
+					</p>
+
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">fit_GD</span>(<span style="color: #007020">self</span>, X, Y, Xval, Yval):
+	X, Y <span style="color: #333333">=</span> shuffle(X, Y)
+	X <span style="color: #333333">=</span> X<span style="color: #333333">.</span>astype(np<span style="color: #333333">.</span>float32)
+	Xval <span style="color: #333333">=</span> Xval<span style="color: #333333">.</span>astype(np<span style="color: #333333">.</span>float32)
+	
+	N, D <span style="color: #333333">=</span> X<span style="color: #333333">.</span>shape
+	n_batches <span style="color: #333333">=</span> <span style="color: #007020">int</span>(np<span style="color: #333333">.</span>ceil(N <span style="color: #333333">/</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>batch_size))
+	
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>train_losses <span style="color: #333333">=</span> []
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>val_losses <span style="color: #333333">=</span> []
+	
+	<span style="color: #008800; font-weight: bold">for</span> ep <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #0000DD; font-weight: bold">1</span>, <span style="color: #007020">self</span><span style="color: #333333">.</span>epochs<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>):
+		<span style="color: #008800; font-weight: bold">for</span> j <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(n_batches):
+			Xbatch <span style="color: #333333">=</span> X[j<span style="color: #333333">*</span>n_batches:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>n_batches,:]
+			Ybatch <span style="color: #333333">=</span> Y[j<span style="color: #333333">*</span>n_batches:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>n_batches,:]
+			
+			pYbatch, Z <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(Xbatch)
+
+			delta <span style="color: #333333">=</span> pYbatch<span style="color: #333333">-</span>Ybatch
+			gradW, gradb, delta <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>grad(delta, Z[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>])
+			
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> (gradW <span style="color: #333333">+</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>reg<span style="color: #333333">*</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W)
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> gradb
+			
+			<span style="color: #008800; font-weight: bold">for</span> i <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #007020">len</span>(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers)<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">2</span>,<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>,<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>):
+				gradW, gradb, delta <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>grad(delta, Z[i], Z<span style="color: #333333">=</span>Z[i<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>], W_next<span style="color: #333333">=</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W)
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> (gradW <span style="color: #333333">+</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>reg<span style="color: #333333">*</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>W)
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> gradb
+
+		pYtrain, _ <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(X)
+		train_loss <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>loss(Y, pYtrain)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>train_losses<span style="color: #333333">.</span>append(train_loss)
+		
+		pYval, _ <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(Xval)
+		val_loss <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>loss(Yval, pYval)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>val_losses<span style="color: #333333">.</span>append(val_loss)
+		
+		<span style="color: #008800; font-weight: bold">if</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>verbose <span style="color: #000000; font-weight: bold">and</span> (ep <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">1</span> <span style="color: #000000; font-weight: bold">or</span> ep <span style="color: #333333">%</span> <span style="color: #0000DD; font-weight: bold">20</span> <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">0</span>):
+			c_rate <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>classification_rate(Xval, Yval)
+			<span style="color: #008800; font-weight: bold">print</span>(f<span style="background-color: #fff0f0">&#39;Epoch: [ {ep} / {self.epochs} ] | Training Loss: {train_loss:.2f} | Val. Loss: {val_loss:.2f} | Val. Classification Rate: {c_rate*100:.2f}%&#39;</span>)
+</pre></div>
+					<br />
+					<p>
+						In a similar fashion, the "fit" methods for the RMSProp and the Adam optimizers are implemented:
+					</p>
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">fit_RMSProp</span>(<span style="color: #007020">self</span>, X, Y, Xval, Yval, decay<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">0.99</span>, mu<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">0.9</span>):
+	X, Y <span style="color: #333333">=</span> shuffle(X, Y)
+	X <span style="color: #333333">=</span> X<span style="color: #333333">.</span>astype(np<span style="color: #333333">.</span>float32)
+	Xval <span style="color: #333333">=</span> Xval<span style="color: #333333">.</span>astype(np<span style="color: #333333">.</span>float32)
+	
+	N, D <span style="color: #333333">=</span> X<span style="color: #333333">.</span>shape
+	n_batches <span style="color: #333333">=</span> <span style="color: #007020">int</span>(np<span style="color: #333333">.</span>ceil(N <span style="color: #333333">/</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>batch_size))
+	
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>train_losses <span style="color: #333333">=</span> []
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>val_losses <span style="color: #333333">=</span> []
+	
+	eps <span style="color: #333333">=</span> <span style="color: #6600EE; font-weight: bold">1e-08</span>
+	
+	<span style="color: #008800; font-weight: bold">for</span> ep <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #0000DD; font-weight: bold">1</span>, <span style="color: #007020">self</span><span style="color: #333333">.</span>epochs<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>):
+		<span style="color: #008800; font-weight: bold">for</span> j <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(n_batches):
+			Xbatch <span style="color: #333333">=</span> X[j<span style="color: #333333">*</span>n_batches:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>n_batches,:]
+			Ybatch <span style="color: #333333">=</span> Y[j<span style="color: #333333">*</span>n_batches:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>n_batches,:]
+			
+			pYbatch, Z <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(Xbatch)
+
+			delta <span style="color: #333333">=</span> pYbatch<span style="color: #333333">-</span>Ybatch
+			gradW, gradb, delta <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>grad(delta, Z[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>])
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>cacheW <span style="color: #333333">=</span> decay <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>cacheW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>decay) <span style="color: #333333">*</span> gradW <span style="color: #333333">*</span> gradW
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>cacheb <span style="color: #333333">=</span> decay <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>cacheb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>decay) <span style="color: #333333">*</span> gradb <span style="color: #333333">*</span> gradb
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vW <span style="color: #333333">=</span> mu <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>mu) <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> (gradW <span style="color: #333333">+</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>reg<span style="color: #333333">*</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W) <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>cacheW) <span style="color: #333333">+</span> eps)
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vb <span style="color: #333333">=</span> mu <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>mu) <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> gradb <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>cacheb) <span style="color: #333333">+</span> eps)
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vW
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vb
+			
+			<span style="color: #008800; font-weight: bold">for</span> i <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #007020">len</span>(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers)<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">2</span>,<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>,<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>):
+				gradW, gradb, delta <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>grad(delta, Z[i], Z<span style="color: #333333">=</span>Z[i<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>], W_next<span style="color: #333333">=</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W)
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>cacheW <span style="color: #333333">=</span> decay <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>cacheW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>decay) <span style="color: #333333">*</span> gradW <span style="color: #333333">*</span> gradW
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>cacheb <span style="color: #333333">=</span> decay <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>cacheb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>decay) <span style="color: #333333">*</span> gradb <span style="color: #333333">*</span> gradb
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vW <span style="color: #333333">=</span> mu <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>mu) <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> (gradW <span style="color: #333333">+</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>reg<span style="color: #333333">*</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>W) <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>cacheW) <span style="color: #333333">+</span> eps)
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vb <span style="color: #333333">=</span> mu <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>mu) <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> gradb <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>cacheb) <span style="color: #333333">+</span> eps)
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vW
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vb
+
+		pYtrain, _ <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(X)
+		train_loss <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>loss(Y, pYtrain)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>train_losses<span style="color: #333333">.</span>append(train_loss)
+		
+		pYval, _ <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(Xval)
+		val_loss <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>loss(Yval, pYval)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>val_losses<span style="color: #333333">.</span>append(val_loss)
+		
+		<span style="color: #008800; font-weight: bold">if</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>verbose <span style="color: #000000; font-weight: bold">and</span> (ep <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">1</span> <span style="color: #000000; font-weight: bold">or</span> ep <span style="color: #333333">%</span> <span style="color: #0000DD; font-weight: bold">20</span> <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">0</span>):
+			c_rate <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>classification_rate(Xval, Yval)
+			<span style="color: #008800; font-weight: bold">print</span>(f<span style="background-color: #fff0f0">&#39;Epoch: [ {ep} / {self.epochs} ] | Training Loss: {train_loss:.2f} | Val. Loss: {val_loss:.2f} | Val. Classification Rate: {c_rate*100:.2f}%&#39;</span>)
+</pre></div>
+<br />
+
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">fit_Adam</span>(<span style="color: #007020">self</span>, X, Y, Xval, Yval, beta1<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">0.9</span>, beta2<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">0.999</span>):
+	X, Y <span style="color: #333333">=</span> shuffle(X, Y)
+	X <span style="color: #333333">=</span> X<span style="color: #333333">.</span>astype(np<span style="color: #333333">.</span>float32)
+	Xval <span style="color: #333333">=</span> Xval<span style="color: #333333">.</span>astype(np<span style="color: #333333">.</span>float32)
+	
+	N, D <span style="color: #333333">=</span> X<span style="color: #333333">.</span>shape
+	n_batches <span style="color: #333333">=</span> <span style="color: #007020">int</span>(np<span style="color: #333333">.</span>ceil(N <span style="color: #333333">/</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>batch_size))
+	
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>train_losses <span style="color: #333333">=</span> []
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>val_losses <span style="color: #333333">=</span> []
+	
+	eps <span style="color: #333333">=</span> <span style="color: #6600EE; font-weight: bold">1e-08</span>
+	<span style="color: #008800; font-weight: bold">for</span> ep <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #0000DD; font-weight: bold">1</span>, <span style="color: #007020">self</span><span style="color: #333333">.</span>epochs<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>):
+		<span style="color: #008800; font-weight: bold">for</span> j <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(n_batches):
+			Xbatch <span style="color: #333333">=</span> X[j<span style="color: #333333">*</span>n_batches:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>n_batches,:]
+			Ybatch <span style="color: #333333">=</span> Y[j<span style="color: #333333">*</span>n_batches:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>n_batches,:]
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>t <span style="color: #333333">+=</span> <span style="color: #0000DD; font-weight: bold">1</span>
+			pYbatch, Z <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(Xbatch)
+
+			delta <span style="color: #333333">=</span> pYbatch<span style="color: #333333">-</span>Ybatch
+			gradW, gradb, delta <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>grad(delta, Z[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>])
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>mW <span style="color: #333333">=</span> beta1 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>mW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1) <span style="color: #333333">*</span> gradW
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>mb <span style="color: #333333">=</span> beta1 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>mb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1) <span style="color: #333333">*</span> gradb
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vW <span style="color: #333333">=</span> beta2 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2) <span style="color: #333333">*</span> gradW <span style="color: #333333">*</span> gradW
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vb <span style="color: #333333">=</span> beta2 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2) <span style="color: #333333">*</span> gradb <span style="color: #333333">*</span> gradb
+			mW_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>mW <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+			mb_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>mb <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+			vW_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vW <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+			vb_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vb <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> mW_hat <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(vW_hat) <span style="color: #333333">+</span> eps)
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> mb_hat <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(vb_hat) <span style="color: #333333">+</span> eps)
+			
+			<span style="color: #008800; font-weight: bold">for</span> i <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #007020">len</span>(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers)<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">2</span>,<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>,<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>):
+				gradW, gradb, delta <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>grad(delta, Z[i], Z<span style="color: #333333">=</span>Z[i<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>], W_next<span style="color: #333333">=</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W)
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>mW <span style="color: #333333">=</span> beta1 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>mW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1) <span style="color: #333333">*</span> gradW
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>mb <span style="color: #333333">=</span> beta1 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>mb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1) <span style="color: #333333">*</span> gradb
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vW <span style="color: #333333">=</span> beta2 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2) <span style="color: #333333">*</span> gradW <span style="color: #333333">*</span> gradW
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vb <span style="color: #333333">=</span> beta2 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2) <span style="color: #333333">*</span> gradb <span style="color: #333333">*</span> gradb
+				mW_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>mW <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+				mb_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>mb <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+				vW_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vW <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+				vb_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vb <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> mW_hat <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(vW_hat) <span style="color: #333333">+</span> eps)
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> mb_hat <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(vb_hat) <span style="color: #333333">+</span> eps)
+			
+			
+		
+		pYtrain, _ <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(X)
+		train_loss <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>loss(Y, pYtrain)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>train_losses<span style="color: #333333">.</span>append(train_loss)
+		
+		pYval, _ <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(Xval)
+		val_loss <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>loss(Yval, pYval)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>val_losses<span style="color: #333333">.</span>append(val_loss)
+		
+		<span style="color: #008800; font-weight: bold">if</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>verbose <span style="color: #000000; font-weight: bold">and</span> (ep <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">1</span> <span style="color: #000000; font-weight: bold">or</span> ep <span style="color: #333333">%</span> <span style="color: #0000DD; font-weight: bold">20</span> <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">0</span>):
+			c_rate <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>classification_rate(Xval, Yval)
+			<span style="color: #008800; font-weight: bold">print</span>(f<span style="background-color: #fff0f0">&#39;Epoch: [ {ep} / {self.epochs} ] | Training Loss: {train_loss:.2f} | Val. Loss: {val_loss:.2f} | Val. Classification Rate: {c_rate*100:.2f}%&#39;</span>)
+</pre></div>
+				<br />
+
+				<h2>The ANNRegression Object</h2>
+					<p>
+						The ANNRegression object is close to identical to the ANNClassification object. The initialization method is shown below.
+					</p>
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-weight: bold">class</span> <span style="color: #BB0066; font-weight: bold">ANNRegression</span>:
+    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">__init__</span>(<span style="color: #007020">self</span>, input_size, output_size, hidden_layer_sizes, learning_rate<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">1e-04</span>, reg<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">0.1</span>,
+                 epochs<span style="color: #333333">=</span><span style="color: #0000DD; font-weight: bold">400</span>, batch_size<span style="color: #333333">=</span><span style="color: #0000DD; font-weight: bold">10</span>, act_fun<span style="color: #333333">=</span><span style="background-color: #fff0f0">&#39;relu&#39;</span>, verbose<span style="color: #333333">=</span><span style="color: #007020">True</span>):
+        <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">=</span> learning_rate
+        <span style="color: #007020">self</span><span style="color: #333333">.</span>reg <span style="color: #333333">=</span> reg
+        <span style="color: #007020">self</span><span style="color: #333333">.</span>epochs <span style="color: #333333">=</span> epochs
+        <span style="color: #007020">self</span><span style="color: #333333">.</span>batch_size <span style="color: #333333">=</span> batch_size
+        <span style="color: #007020">self</span><span style="color: #333333">.</span>hidden_layer_sizes <span style="color: #333333">=</span> hidden_layer_sizes
+        <span style="color: #007020">self</span><span style="color: #333333">.</span>act_fun <span style="color: #333333">=</span> act_fun
+        <span style="color: #007020">self</span><span style="color: #333333">.</span>verbose <span style="color: #333333">=</span> verbose
+        <span style="color: #007020">self</span><span style="color: #333333">.</span>layers <span style="color: #333333">=</span> []
+        M <span style="color: #333333">=</span> output_size
+        M1 <span style="color: #333333">=</span> input_size
+        <span style="color: #008800; font-weight: bold">for</span> M2 <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>hidden_layer_sizes:
+            h <span style="color: #333333">=</span> Layer(M1, M2, <span style="color: #007020">self</span><span style="color: #333333">.</span>act_fun)
+            <span style="color: #007020">self</span><span style="color: #333333">.</span>layers<span style="color: #333333">.</span>append(h)
+            M1 <span style="color: #333333">=</span> M2
+        h <span style="color: #333333">=</span> Layer(M1, M, <span style="color: #007020">self</span><span style="color: #333333">.</span>act_fun, islast<span style="color: #333333">=</span><span style="color: #007020">True</span>)
+        <span style="color: #007020">self</span><span style="color: #333333">.</span>layers<span style="color: #333333">.</span>append(h)
+        <span style="color: #007020">self</span><span style="color: #333333">.</span>t <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">0</span>
+</pre></div>
+					<br />
+					<p>
+						The main difference lies in the "forward", "predict" and "loss" methods. In the "forward" method, there is no need
+						for the softmax output, as the Regression model's output function is just the linear activation. In the "predict"
+						function, the model's prediction is basically just the forward-pass of the input data X. Finally, in the "loss"
+						method, the mean of squared errors is implemented. It is noted that the mean of squared errors is just for
+						monitoring the learning convergence. In the model's parameters' update rule, the sum of squared errors is
+						considered.
+					</p>
+
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">forward</span>(<span style="color: #007020">self</span>, X):
+	Z <span style="color: #333333">=</span> [X]
+	<span style="color: #008800; font-weight: bold">for</span> h <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[:<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]:
+		Z<span style="color: #333333">.</span>append(h<span style="color: #333333">.</span>forward(Z[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]))
+	
+	Yhat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>forward(Z[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>])
+	<span style="color: #008800; font-weight: bold">return</span> Yhat, Z
+
+    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">loss</span>(<span style="color: #007020">self</span>, Y, Yhat):
+	<span style="color: #008800; font-weight: bold">return</span> ((Y <span style="color: #333333">-</span> Yhat)<span style="color: #333333">**</span><span style="color: #0000DD; font-weight: bold">2</span>)<span style="color: #333333">.</span>mean()
+
+    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">predict</span>(<span style="color: #007020">self</span>, X):
+	Yhat, _ <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(X)
+	<span style="color: #008800; font-weight: bold">return</span> Yhat
+</pre></div>
+					<br />
+					<p>
+						The family of the "fit" functions are close to identical, as they share some very minor differences (such as there
+						is no classification rate in regression). The code is provided below:
+					</p>
+					<div class="container" style="height: 100vh; width: 100%;">
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">partial_fit</span>(<span style="color: #007020">self</span>, X, Y):
+	Yhat, Z <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(X)
+        
+	delta <span style="color: #333333">=</span> Yhat<span style="color: #333333">-</span>Y
+	gradW, gradb, delta <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>grad(delta, Z[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>])
+	
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> (gradW <span style="color: #333333">+</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>reg<span style="color: #333333">*</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W)
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> gradb
+	
+	<span style="color: #008800; font-weight: bold">for</span> i <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #007020">len</span>(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers)<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">2</span>,<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>,<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>):
+		gradW, gradb, delta <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>grad(delta, Z[i], Z<span style="color: #333333">=</span>Z[i<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>], W_next<span style="color: #333333">=</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> (gradW <span style="color: #333333">+</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>reg<span style="color: #333333">*</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>W)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> gradb
+
+
+    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">partial_fit_RMSProp</span>(<span style="color: #007020">self</span>, X, Y, decay<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">0.99</span>, mu<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">0.9</span>):
+	eps <span style="color: #333333">=</span> <span style="color: #6600EE; font-weight: bold">1e-08</span>
+	Yhat, Z <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(X)
+	delta <span style="color: #333333">=</span> Yhat<span style="color: #333333">-</span>Y
+	gradW, gradb, delta <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>grad(delta, Z[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>])
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>cacheW <span style="color: #333333">=</span> decay <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>cacheW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>decay) <span style="color: #333333">*</span> gradW <span style="color: #333333">*</span> gradW
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>cacheb <span style="color: #333333">=</span> decay <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>cacheb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>decay) <span style="color: #333333">*</span> gradb <span style="color: #333333">*</span> gradb
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vW <span style="color: #333333">=</span> mu <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>mu) <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> (gradW <span style="color: #333333">+</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>reg<span style="color: #333333">*</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W) <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>cacheW) <span style="color: #333333">+</span> eps)
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vb <span style="color: #333333">=</span> mu <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>mu) <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> gradb <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>cacheb) <span style="color: #333333">+</span> eps)
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vW
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vb
+	
+	<span style="color: #008800; font-weight: bold">for</span> i <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #007020">len</span>(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers)<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">2</span>,<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>,<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>):
+		gradW, gradb, delta <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>grad(delta, Z[i], Z<span style="color: #333333">=</span>Z[i<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>], W_next<span style="color: #333333">=</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>cacheW <span style="color: #333333">=</span> decay <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>cacheW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>decay) <span style="color: #333333">*</span> gradW <span style="color: #333333">*</span> gradW
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>cacheb <span style="color: #333333">=</span> decay <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>cacheb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>decay) <span style="color: #333333">*</span> gradb <span style="color: #333333">*</span> gradb
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vW <span style="color: #333333">=</span> mu <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>mu) <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> (gradW <span style="color: #333333">+</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>reg<span style="color: #333333">*</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>W) <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>cacheW) <span style="color: #333333">+</span> eps)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vb <span style="color: #333333">=</span> mu <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>mu) <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> gradb <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>cacheb) <span style="color: #333333">+</span> eps)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vW
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vb
+
+
+    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">partial_fit_Adam</span>(<span style="color: #007020">self</span>, X, Y, beta1<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">0.9</span>, beta2<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">0.999</span>):
+	eps <span style="color: #333333">=</span> <span style="color: #6600EE; font-weight: bold">1e-08</span>
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>t <span style="color: #333333">+=</span> <span style="color: #0000DD; font-weight: bold">1</span>
+	Yhat, Z <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(X)
+
+	delta <span style="color: #333333">=</span> Yhat<span style="color: #333333">-</span>Y
+	gradW, gradb, delta <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>grad(delta, Z[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>])
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>mW <span style="color: #333333">=</span> beta1 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>mW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1) <span style="color: #333333">*</span> gradW
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>mb <span style="color: #333333">=</span> beta1 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>mb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1) <span style="color: #333333">*</span> gradb
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vW <span style="color: #333333">=</span> beta2 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2) <span style="color: #333333">*</span> gradW <span style="color: #333333">*</span> gradW
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vb <span style="color: #333333">=</span> beta2 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2) <span style="color: #333333">*</span> gradb <span style="color: #333333">*</span> gradb
+	mW_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>mW <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+	mb_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>mb <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+	vW_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vW <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+	vb_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vb <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> mW_hat <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(vW_hat) <span style="color: #333333">+</span> eps)
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> mb_hat <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(vb_hat) <span style="color: #333333">+</span> eps)
+	
+	<span style="color: #008800; font-weight: bold">for</span> i <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #007020">len</span>(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers)<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">2</span>,<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>,<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>):
+		gradW, gradb, delta <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>grad(delta, Z[i], Z<span style="color: #333333">=</span>Z[i<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>], W_next<span style="color: #333333">=</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>mW <span style="color: #333333">=</span> beta1 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>mW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1) <span style="color: #333333">*</span> gradW
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>mb <span style="color: #333333">=</span> beta1 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>mb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1) <span style="color: #333333">*</span> gradb
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vW <span style="color: #333333">=</span> beta2 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2) <span style="color: #333333">*</span> gradW <span style="color: #333333">*</span> gradW
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vb <span style="color: #333333">=</span> beta2 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2) <span style="color: #333333">*</span> gradb <span style="color: #333333">*</span> gradb
+		mW_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>mW <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+		mb_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>mb <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+		vW_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vW <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+		vb_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vb <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> mW_hat <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(vW_hat) <span style="color: #333333">+</span> eps)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> mb_hat <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(vb_hat) <span style="color: #333333">+</span> eps)
+
+
+    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">fit_GD</span>(<span style="color: #007020">self</span>, X, Y, Xval, Yval):
+	X, Y <span style="color: #333333">=</span> shuffle(X, Y)
+	X <span style="color: #333333">=</span> X<span style="color: #333333">.</span>astype(np<span style="color: #333333">.</span>float32)
+	Y <span style="color: #333333">=</span> Y<span style="color: #333333">.</span>astype(np<span style="color: #333333">.</span>float32)
+	Xval <span style="color: #333333">=</span> Xval<span style="color: #333333">.</span>astype(np<span style="color: #333333">.</span>float32)
+	Yval <span style="color: #333333">=</span> Yval<span style="color: #333333">.</span>astype(np<span style="color: #333333">.</span>float32)
+	
+	N, D <span style="color: #333333">=</span> X<span style="color: #333333">.</span>shape
+	n_batches <span style="color: #333333">=</span> <span style="color: #007020">int</span>(np<span style="color: #333333">.</span>ceil(N <span style="color: #333333">/</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>batch_size))
+	
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>train_losses <span style="color: #333333">=</span> []
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>val_losses <span style="color: #333333">=</span> []
+	
+	<span style="color: #008800; font-weight: bold">for</span> ep <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #0000DD; font-weight: bold">1</span>, <span style="color: #007020">self</span><span style="color: #333333">.</span>epochs<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>):
+		<span style="color: #008800; font-weight: bold">for</span> j <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(n_batches):
+			Xbatch <span style="color: #333333">=</span> X[j<span style="color: #333333">*</span>n_batches:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>n_batches,:]
+			Ybatch <span style="color: #333333">=</span> Y[j<span style="color: #333333">*</span>n_batches:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>n_batches,:]
+			
+			Yhat_batch, Z <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(Xbatch)
+
+			delta <span style="color: #333333">=</span> Yhat_batch<span style="color: #333333">-</span>Ybatch
+			gradW, gradb, delta <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>grad(delta, Z[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>])
+			
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> (gradW <span style="color: #333333">+</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>reg<span style="color: #333333">*</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W)
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> gradb
+			
+			<span style="color: #008800; font-weight: bold">for</span> i <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #007020">len</span>(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers)<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">2</span>,<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>,<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>):
+				gradW, gradb, delta <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>grad(delta, Z[i], Z<span style="color: #333333">=</span>Z[i<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>], W_next<span style="color: #333333">=</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W)
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> (gradW <span style="color: #333333">+</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>reg<span style="color: #333333">*</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>W)
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> gradb
+
+		Yhat_train, _ <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(X)
+		train_loss <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>loss(Y, Yhat_train)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>train_losses<span style="color: #333333">.</span>append(train_loss)
+		
+		Yhat_val, _ <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(Xval)
+		val_loss <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>loss(Yval, Yhat_val)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>val_losses<span style="color: #333333">.</span>append(val_loss)
+		
+		<span style="color: #008800; font-weight: bold">if</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>verbose <span style="color: #000000; font-weight: bold">and</span> (ep <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">1</span> <span style="color: #000000; font-weight: bold">or</span> ep <span style="color: #333333">%</span> <span style="color: #0000DD; font-weight: bold">20</span> <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">0</span>):
+			<span style="color: #008800; font-weight: bold">print</span>(f<span style="background-color: #fff0f0">&#39;Epoch: [ {ep} / {self.epochs} ] | Training Loss: {train_loss:.2f} | Val. Loss: {val_loss:.2f}&#39;</span>)
+
+
+
+    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">fit_RMSProp</span>(<span style="color: #007020">self</span>, X, Y, Xval, Yval, decay<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">0.99</span>, mu<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">0.9</span>):
+	X, Y <span style="color: #333333">=</span> shuffle(X, Y)
+	X <span style="color: #333333">=</span> X<span style="color: #333333">.</span>astype(np<span style="color: #333333">.</span>float32)
+	Y <span style="color: #333333">=</span> Y<span style="color: #333333">.</span>astype(np<span style="color: #333333">.</span>float32)
+	Xval <span style="color: #333333">=</span> Xval<span style="color: #333333">.</span>astype(np<span style="color: #333333">.</span>float32)
+	Yval <span style="color: #333333">=</span> Yval<span style="color: #333333">.</span>astype(np<span style="color: #333333">.</span>float32)
+	
+	N, D <span style="color: #333333">=</span> X<span style="color: #333333">.</span>shape
+	n_batches <span style="color: #333333">=</span> <span style="color: #007020">int</span>(np<span style="color: #333333">.</span>ceil(N <span style="color: #333333">/</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>batch_size))
+	
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>train_losses <span style="color: #333333">=</span> []
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>val_losses <span style="color: #333333">=</span> []
+	
+	eps <span style="color: #333333">=</span> <span style="color: #6600EE; font-weight: bold">1e-08</span>
+	
+	<span style="color: #008800; font-weight: bold">for</span> ep <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #0000DD; font-weight: bold">1</span>, <span style="color: #007020">self</span><span style="color: #333333">.</span>epochs<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>):
+		<span style="color: #008800; font-weight: bold">for</span> j <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(n_batches):
+			Xbatch <span style="color: #333333">=</span> X[j<span style="color: #333333">*</span>n_batches:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>n_batches,:]
+			Ybatch <span style="color: #333333">=</span> Y[j<span style="color: #333333">*</span>n_batches:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>n_batches,:]
+			
+			Yhat_batch, Z <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(Xbatch)
+
+			delta <span style="color: #333333">=</span> Yhat_batch<span style="color: #333333">-</span>Ybatch
+			gradW, gradb, delta <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>grad(delta, Z[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>])
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>cacheW <span style="color: #333333">=</span> decay <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>cacheW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>decay) <span style="color: #333333">*</span> gradW <span style="color: #333333">*</span> gradW
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>cacheb <span style="color: #333333">=</span> decay <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>cacheb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>decay) <span style="color: #333333">*</span> gradb <span style="color: #333333">*</span> gradb
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vW <span style="color: #333333">=</span> mu <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>mu) <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> (gradW <span style="color: #333333">+</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>reg<span style="color: #333333">*</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W) <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>cacheW) <span style="color: #333333">+</span> eps)
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vb <span style="color: #333333">=</span> mu <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>mu) <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> gradb <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>cacheb) <span style="color: #333333">+</span> eps)
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vW
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vb
+			
+			<span style="color: #008800; font-weight: bold">for</span> i <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #007020">len</span>(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers)<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">2</span>,<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>,<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>):
+				gradW, gradb, delta <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>grad(delta, Z[i], Z<span style="color: #333333">=</span>Z[i<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>], W_next<span style="color: #333333">=</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W)
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>cacheW <span style="color: #333333">=</span> decay <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>cacheW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>decay) <span style="color: #333333">*</span> gradW <span style="color: #333333">*</span> gradW
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>cacheb <span style="color: #333333">=</span> decay <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>cacheb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>decay) <span style="color: #333333">*</span> gradb <span style="color: #333333">*</span> gradb
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vW <span style="color: #333333">=</span> mu <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>mu) <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> (gradW <span style="color: #333333">+</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>reg<span style="color: #333333">*</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>W) <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>cacheW) <span style="color: #333333">+</span> eps)
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vb <span style="color: #333333">=</span> mu <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>mu) <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> gradb <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>cacheb) <span style="color: #333333">+</span> eps)
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vW
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vb
+
+		Yhat_train, _ <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(X)
+		train_loss <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>loss(Y, Yhat_train)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>train_losses<span style="color: #333333">.</span>append(train_loss)
+		
+		Yhat_val, _ <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(Xval)
+		val_loss <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>loss(Yval, Yhat_val)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>val_losses<span style="color: #333333">.</span>append(val_loss)
+		
+		<span style="color: #008800; font-weight: bold">if</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>verbose <span style="color: #000000; font-weight: bold">and</span> (ep <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">1</span> <span style="color: #000000; font-weight: bold">or</span> ep <span style="color: #333333">%</span> <span style="color: #0000DD; font-weight: bold">20</span> <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">0</span>):
+			<span style="color: #008800; font-weight: bold">print</span>(f<span style="background-color: #fff0f0">&#39;Epoch: [ {ep} / {self.epochs} ] | Training Loss: {train_loss:.2f} | Val. Loss: {val_loss:.2f}&#39;</span>)
+
+
+    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">fit_Adam</span>(<span style="color: #007020">self</span>, X, Y, Xval, Yval, beta1<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">0.9</span>, beta2<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">0.999</span>):
+	X, Y <span style="color: #333333">=</span> shuffle(X, Y)
+	X <span style="color: #333333">=</span> X<span style="color: #333333">.</span>astype(np<span style="color: #333333">.</span>float32)
+	Y <span style="color: #333333">=</span> Y<span style="color: #333333">.</span>astype(np<span style="color: #333333">.</span>float32)
+	Xval <span style="color: #333333">=</span> Xval<span style="color: #333333">.</span>astype(np<span style="color: #333333">.</span>float32)
+	Yval <span style="color: #333333">=</span> Yval<span style="color: #333333">.</span>astype(np<span style="color: #333333">.</span>float32)
+	
+	N, D <span style="color: #333333">=</span> X<span style="color: #333333">.</span>shape
+	n_batches <span style="color: #333333">=</span> <span style="color: #007020">int</span>(np<span style="color: #333333">.</span>ceil(N <span style="color: #333333">/</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>batch_size))
+	
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>train_losses <span style="color: #333333">=</span> []
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>val_losses <span style="color: #333333">=</span> []
+	
+	eps <span style="color: #333333">=</span> <span style="color: #6600EE; font-weight: bold">1e-08</span>
+	<span style="color: #008800; font-weight: bold">for</span> ep <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #0000DD; font-weight: bold">1</span>, <span style="color: #007020">self</span><span style="color: #333333">.</span>epochs<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>):
+		<span style="color: #008800; font-weight: bold">for</span> j <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(n_batches):
+			Xbatch <span style="color: #333333">=</span> X[j<span style="color: #333333">*</span>n_batches:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>n_batches,:]
+			Ybatch <span style="color: #333333">=</span> Y[j<span style="color: #333333">*</span>n_batches:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>n_batches,:]
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>t <span style="color: #333333">+=</span> <span style="color: #0000DD; font-weight: bold">1</span>
+			Yhat_batch, Z <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(Xbatch)
+
+			delta <span style="color: #333333">=</span> Yhat_batch<span style="color: #333333">-</span>Ybatch
+			gradW, gradb, delta <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>grad(delta, Z[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>])
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>mW <span style="color: #333333">=</span> beta1 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>mW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1) <span style="color: #333333">*</span> gradW
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>mb <span style="color: #333333">=</span> beta1 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>mb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1) <span style="color: #333333">*</span> gradb
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vW <span style="color: #333333">=</span> beta2 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2) <span style="color: #333333">*</span> gradW <span style="color: #333333">*</span> gradW
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vb <span style="color: #333333">=</span> beta2 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2) <span style="color: #333333">*</span> gradb <span style="color: #333333">*</span> gradb
+			mW_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>mW <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+			mb_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>mb <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+			vW_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vW <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+			vb_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>vb <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> mW_hat <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(vW_hat) <span style="color: #333333">+</span> eps)
+			<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> mb_hat <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(vb_hat) <span style="color: #333333">+</span> eps)
+			
+			<span style="color: #008800; font-weight: bold">for</span> i <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #007020">len</span>(<span style="color: #007020">self</span><span style="color: #333333">.</span>layers)<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">2</span>,<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>,<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>):
+				gradW, gradb, delta <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>grad(delta, Z[i], Z<span style="color: #333333">=</span>Z[i<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>], W_next<span style="color: #333333">=</span><span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>]<span style="color: #333333">.</span>W)
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>mW <span style="color: #333333">=</span> beta1 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>mW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1) <span style="color: #333333">*</span> gradW
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>mb <span style="color: #333333">=</span> beta1 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>mb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1) <span style="color: #333333">*</span> gradb
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vW <span style="color: #333333">=</span> beta2 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vW <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2) <span style="color: #333333">*</span> gradW <span style="color: #333333">*</span> gradW
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vb <span style="color: #333333">=</span> beta2 <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vb <span style="color: #333333">+</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2) <span style="color: #333333">*</span> gradb <span style="color: #333333">*</span> gradb
+				mW_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>mW <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+				mb_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>mb <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta1<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+				vW_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vW <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+				vb_hat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>vb <span style="color: #333333">/</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>beta2<span style="color: #333333">**</span><span style="color: #007020">self</span><span style="color: #333333">.</span>t)
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> mW_hat <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(vW_hat) <span style="color: #333333">+</span> eps)
+				<span style="color: #007020">self</span><span style="color: #333333">.</span>layers[i]<span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>learning_rate <span style="color: #333333">*</span> mb_hat <span style="color: #333333">/</span> (np<span style="color: #333333">.</span>sqrt(vb_hat) <span style="color: #333333">+</span> eps)
+			
+			
+		
+		Yhat_train, _ <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(X)
+		train_loss <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>loss(Y, Yhat_train)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>train_losses<span style="color: #333333">.</span>append(train_loss)
+		
+		Yhat_val, _ <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(Xval)
+		val_loss <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>loss(Yval, Yhat_val)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>val_losses<span style="color: #333333">.</span>append(val_loss)
+		
+		<span style="color: #008800; font-weight: bold">if</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>verbose <span style="color: #000000; font-weight: bold">and</span> (ep <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">1</span> <span style="color: #000000; font-weight: bold">or</span> ep <span style="color: #333333">%</span> <span style="color: #0000DD; font-weight: bold">20</span> <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">0</span>):
+			<span style="color: #008800; font-weight: bold">print</span>(f<span style="background-color: #fff0f0">&#39;Epoch: [ {ep} / {self.epochs} ] | Training Loss: {train_loss:.2f} | Val. Loss: {val_loss:.2f}&#39;</span>)
+</pre></div>
+
+					</div>
+				
+				<br />
+				<hr>
+				<br />
+				
+
+				<h2>A Classification Test Case</h2>
+					<p>
+						In this section, a classification test case is used as an example to showcase the developed ANNClassification
+						object and its methods. For this classification example, a three-legged spiral dataset is generated (Fig. 1).
+						Each spiral is a different class, thus this is a multi-class classification problem.
+					</p>
+					<figure>
+						<img src="/images/ann/classification_case_dataset.png"/>
+						<figcaption>Fig. 1 - The generated dataset simulates a three-legged spiral, with each spiral leg
+							representing a class (shown in different colors).
+						</figcaption>
+					</figure>
+					<p>
+						The input data is
+						standard scaled and the output (the classes) are one-hot encoded. The dataset is then shuffled and the 20%
+						is stored as the validation data. Then, three models are isntanced and trained, one that uses the standard
+						gradient descent, one that uses Momentum RMSProp and one that uses Adam. The models have two hidden layers,
+						with 10 neurons each. After the models are trained, the "val_losses" lists of the models (which contain
+						the validation loss per epoch) are plotted (Fig. 2). It is confirmed that the Adam optimizer converges faster than
+						the other two.
+					</p>
+					<figure>
+						<img src="/images/ann/classification_learning_convergence.png"/>
+						<figcaption>Fig. 2 - The Validation Loss per epoch of the three models. The model that uses the Adam
+							optimizer converges the fastest.
+						</figcaption>
+					</figure>
+					<p>
+						Finally, the model that was trained using the Adam optimizer is given the complete dataset to predict the labels.
+						As the model achieves 100% classification rate for the validation set, it classifies correctly the whole dataset
+						(Fig. 3).
+					</p>
+					<figure>
+						<img src="/images/ann/classification_adam_test.png"/>
+						<figcaption>Fig. 3 - The best model makes predictions for the whole dataset.
+						</figcaption>
+					</figure>
+					The jupyter notebook used for this example case is provided below:
+					<div class="container" style="height: 100vh; width: 100%;">
+						<iframe src="/images/ann/ANN_Classification_Test_Case.html"
+						style="height: 100%; width: 300%;"></iframe>
+					</div>
+
+				<br />
+				<hr>
+				<br />
+
+				<h2>A Regression Test Case</h2>
+					<p>
+						In this section, a regression test case is used as an example to showcase the developed ANNRegression
+						object and its methods. For this example, a numerical dataset is generated. Two random variables are
+						introduced: \( x_1 \sim  \mathcal{N}(1.5, 2.5) \ \& x_2 \ \sim  \mathcal{N}(0, 2\pi) \). The output
+						variables are calculated as such:
+						$$ y_1 = x_1^2 \cdot \text{sin}(x_2) $$
+						$$ y_2 = (x_1 + \text{sin}(x_2))^2 \cdot cos(x_2) $$
+						As it is can be seen from the equations above, this regression problem is non-linear.<br />
+						The data is standard scaled. The dataset is then shuffled and the 20%
+						is stored as the validation data. Then, three models are isntanced and trained, one that uses the standard
+						gradient descent, one that uses Momentum RMSProp and one that uses Adam. The models have two hidden layers,
+						with 10 neurons each. After the models are trained, the "val_losses" lists of the models (which contain
+						the validation loss per epoch) are plotted (Fig. 4).
+					</p>
+					<figure>
+						<img src="/images/ann/regression_case_learning_convergence.png"/>
+						<figcaption>Fig. 4 - The Validation Loss per epoch of the three models.
+						</figcaption>
+					</figure>
+					<p>
+						Finally, an additional set of data points are generated as test points. After the models' training sessions,
+						the models are testing using the test dataset. The three models performed well, with the model trained using the
+						Adam optimizer performing the best:
+						<div class="container" style="height: 5em; width: 100%;">
+						$$ L_{GD} = 0.182, L_{RMS} = 0.179, L_{Adam} = 0.147 $$
+						</div>
+					</p>
+					The jupyter notebook used for this example case is provided below:
+					<div class="container" style="height: 100vh; width: 100%;">
+						<iframe src="/images/ann/ANN_Regression_Test_Case.html"
+						style="height: 100%; width: 300%;"></iframe>
+					</div>
+
+				<br />
+				<hr>
+				<br />
+				
+				<h2>Conclusion</h2>
+					<p>
+						In conclusion, in this project, two neural network models were created in the form of callable objects from scratch.
+						The first model, is suitable for classification problems, hence the name ANNClassification, while the second model
+						is suitable for regression problems, hence the name ANNRegression. The models include, different optimizers to fit
+						onto data, such as the standard mini-batch gradient descent, the RMSProp with Momentum and the Adam optimizer.
+						Partial fit methods were also implemented for one-step parameters' update.
+					</p>
+
+				<br />
+				<hr>
+				<br />
+				<h2>References</h2>
+					<p>Aggarwal, C. C. (2019). Neural Networks and Deep Learning: A Textbook (1st ed.). Springer Cham.</p>
+					<p>Kuhn, M., & Johnson, K. (2013). Applied Predictive Modeling. Springer.</p>
+					<p></p>Goodfellow, I., Bengio, Y., Courville, A., & Bengio, Y. (2016). Deep Learning (Vol. 1). MIT Press Cambridge.</p>
+
+				<br />
+				<hr>
+				<br />
+				<a href="/projects.html" class="button">Back to Projects</a>
+				<br />
+				<br />
+	
+	</div>
+
+	</body>
+</html>

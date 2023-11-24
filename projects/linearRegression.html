@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linear Regression Model in Python</title>
+	<meta property="og:image" content="https://avatars.githubusercontent.com/u/9919?s=200&v=4">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400&display=swap">
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'>  
+	<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+</head>
+<body>
+    <div id="container">
+        <div id="sidebar">
+
+            <div id="sidebar-content">
+                <ul style="list-style-type: none;">
+                    <li><a href="/index.html">Home</a></li>
+                    <li><a href="/projects.html">Projects</a></li>
+                    <li><a href="/info.html">About Me</a></li>
+                    <li><a href="/contact.html">Contact</a></li>
+                </ul>
+            </div>
+
+            <div id="sidebar-contact-icons">
+                <a href="https://www.linkedin.com/in/georgios-tsamis-799992212/">
+                    <i class='fa fa-linkedin-square' style="font-size:2em; margin-right:1em;"></i>
+                </a>
+
+                <a href="https://github.com/TsamisG">
+                    <i class='fa fa-github' style="font-size:2em; margin-right:1em;"></i>
+                </a>
+
+                <a href="mailto:tsamis.g@outlook.com">
+                    <i class='fa fa-envelope-square' style="font-size:2em;"></i>
+                </a>
+
+                
+            </div>
+            
+        </div>
+
+		<div id="content">
+			<h1>Linear Regression Model in Python</h1>
+						<p>In this mini-project, a Linear Regression model is created from scratch in Python.
+							The model is programmed as a callable object in a simple form, so it can be used easily in
+							any project.
+						</p>
+						<p> Linear regression falls into the category of Supervised Learning
+							and is an attempt to model the relationship between two variables by
+							fitting a linear equation to observed data, where one variable is considered to be an explanatory
+							variable and the other as a dependent variable.<br />
+
+				<br />
+				<hr>
+				<br />
+					<h2>A Brief Introduction</h2>
+						<p>
+							The goal of any regression model is to use it to make predictions for a variable \( y \), given a
+							variable \( x \). Usually, the model's prediction for \( y \) is notated as \( \hat{y} \).
+							In the general form, \( y \) can be a vector of variables of interest and \( x \) may be also a
+							vector of features that affect \( y \). By measuring or collecting data about \( x \) and \( y \),
+							the matrices \( X \) and \( Y \) are formed, dimensioned \( N \times D \) and \( N \times M \) respectively,
+							where:
+							<ul>
+								<li>\( N \) is the number of data points collected</li>
+								<li>\( D \) is the number of input features measured</li>
+								<li>\( M \) is the number of predictor values of interest</li>
+							</ul>
+							Thus, the goal of linear regression is to find the linear relationship between measured data \( X \)
+							and \( Y \).
+						</p>
+				<br />
+				<hr>
+				<br />
+					<h2>Mathematical Formulation</h2>
+						
+						<h3>The Linear Model</h3>
+						<p>
+							Using a linear model, a linear relationship between \( x \) and \( y \) is assumed. This means that
+							\( x \) and \( y \) can be correlated using a linear equation:
+							$$ \vec{y} = W^T \vec{x} $$
+							Where: \( \vec{x} \) is a column vector, dimensioned \( D \times 1 \), \( \vec{y} \) is a column vector,
+							dimensioned \( M \times 1 \) and \( W \) is a matrix dimensioned \( D \times M \). The matrix \( W \)
+							is a matrix of weights, whose values determine the relationship between the input features and the
+							output predictor values. This simple linear
+							relationship assumes a zero mean, which is not always the case. To elaborate, an input vector
+							\( \vec{x} = \vec{0} \) produces an output vector \( \vec{y} = \vec{0} \), which is not usually the case.
+							This is why an intercept or a bias term is added to form:
+							$$ \vec{y} = W^T \vec{x} + \vec{b} $$
+							The bias is a column vector, dimensioned \( M \times 1 \), which shifts the mean value of  \( \vec{y} \)
+							by its value. In a simple form where the predictor value is just one, the linear relationship presented
+							above represents the weighted sum of input features plus the bias:
+							$$ y = w_1 x_1 + w_2 x_2 + ... + w_d x_d + b $$
+							The set of weights and bias are also called parameters of the model.
+							<br />
+							Assuming the parameters are known, to make a prediction for \( \vec{y} \), given an input
+							vector of features \( \vec{x} \), the linear expression stated above is used:
+							$$ \hat{\vec{y}} = W^T \vec{x} + b $$
+						</p>
+						<h3>The Loss Function</h3>
+						<p>
+							Having said the above, the goal is to find the parameters that produce predictions as close to the measured
+							data as possible. In this sense, a loss function can be introduced, that quantifies the error of the
+							model's prediction:
+							$$ \text{Loss} = (\hat{\vec{y}} - \vec{y})^T (\hat{\vec{y}} - \vec{y}) $$
+							This loss function is known as the "Squared Error Loss", as in the simple case where the predictor is
+							just one value, the loss function becomes:
+							$$ \text{Loss} = (\hat{y} - y)^2 $$
+							Given the aforementioned loss function (which is also notated with the letter J), the goal is to minimize
+							the total loss over all of the data points,
+							or to find the minimum sum of Losses given the parameters:
+							<div class="container" style="height: 6em; width: 100%;">
+							$$ \text{min:} \ J = \frac{1}{2} \sum _{i=1} ^N (\hat{\vec{y_i}} - \vec{y_i})^2 =
+							\frac{1}{2} (\hat{Y} - Y)^T (\hat{Y} - Y)$$
+							</div>
+							The sum of Losses is also multiplied with \( \frac{1}{2} \) for convenience, as it cancels out with
+							the two that comes from the square exponent when differentiating.
+						</p>
+						<h3>Loss Minimization through Gradient Descent</h3>
+						<p>
+							<br />
+							Although an analytical solution can be derived for this problem, this project implements Gradient Descent.
+							This means that to find the parameters that correspond to the minimum Loss, an iterative process
+							is implemented. At each iteration, the parameters are updated by taking a step into the oposite
+							direction of the gradient, as the gradient points to the direction of the maximum:
+							$$ W_{t+1} = W_t - \alpha \nabla _W J $$
+							$$ b_{t+1} = b_t - \alpha \nabla _b J $$
+							The gradients with respect to the weights and the bias can be easily derived:
+							$$ \nabla _W J = X^T (\hat{Y} - Y) $$
+							$$ \nabla _b J = \sum _{i=1} ^N (\hat{\vec{y_i}} - \vec{y_i}) $$
+							The iterative Loss minimization process is also called "training" or "learning session" and is repeated
+							until the Loss converges to a minimum. The learning iterations are also called "epochs".
+							The gradient descent step includes a user defined parameter (also known as hyperparameter): the learning
+							rate \( \alpha \). The learning rate defines the magnitude of the step at each iteration and has to be
+							defined accordingly. A large learning rate may lead to overshoot in the learning process and miss the
+							minimum, while a small learning rate may lead to excessively long training sessions. In Fig. 1, a
+							visualization of the Loss function J and the optimal parameters, which correspond to the global minimum
+							is displayed.
+							<figure>
+								<img src="/images/linReg/loss_gradient.png" style="height:20em;"/>
+								<figcaption>Fig. 1 - A visualization of the Loss function and the optimal parameter values
+									that correspond to the global minimum.</figcaption>
+							</figure>
+						</p>
+						<h3>Weights Initialization</h3>
+							An important aspect in terms of training a machine learning model is the initialization of the model's
+							parameters. A bad initialization puts the model in a disadvantageous position as far as learning goes.
+							In this project, the Xavier-Glorot initialization is implemented. The initialization technique is
+							briefly explained:<br />
+							Most of the times, the input/output data are normalized using standard scaling before training.
+							This means that the new, normalized data have zero mean and variance equal to one. Thus, the bias
+							is not needed. For a pair of input and output vectors:
+							<div class="container" style="height: 6em; width: 100%;">
+							$$ y = W^Tx + b \rightarrow y = w_1 x_1 + w_2 x_2 + ... + w_D x_D \rightarrow $$
+							$$ var(y) = var(w_1) var(x_1) + var(w_2) var(x_2) + ... + var(w_D) var(x_D) $$
+							</div>
+							As the dataset is standard scaled: \( var(y) = 1, var(x) = 1 \) <br />
+							$$ 1 = \sum _{i=1} ^D var(w_i)$$
+							All of the weights share the same variance: \( var(w_i) = var(w) \)
+							<div class="container" style="height: 6em; width: 100%;">
+							$$ 1 = D var(w) \rightarrow var(w) = \frac{1}{D} \rightarrow std(w) = \frac{1}{\sqrt{D}}$$
+							</div>
+							Thus, the weights of the model are randomly initialized from the normal distribution and then are scaled
+							by the standard deviation of \( \frac{1}{\sqrt{D}} \).
+						</p>
+
+
+					<br />
+					<hr>
+					<br />
+					<h2>Python Implementation</h2>
+						<p>
+							Starting off the python script, the file is saved as "LinearRegression.py" and can be found in
+							my github repository <a href="https://github.com/TsamisG/machineLearningModels">machineLearningModels</a>.
+							First of all, the numpy
+							module is imported and the object LinearRegressor is defined. To initiate the model, the input dimension
+							D and the output dimension M are required (referenced as input_dim, output_dim). As a default, the
+							learning rate is set to \( 10^{-4} \), the training epochs are set to 400 and the option for the model
+							to have a bias term is set to True.<br />
+							The weight matrix is initialized according to the Xavier-Glorot initialization and the bias term is
+							initialized to a vector of zeros.
+						</p>
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">numpy</span> <span style="color: #008800; font-weight: bold">as</span> <span style="color: #0e84b5; font-weight: bold">np</span>
+<span style="color: #008800; font-weight: bold">class</span> <span style="color: #BB0066; font-weight: bold">LinearRegressor</span>:
+    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">__init__</span>(<span style="color: #007020">self</span>, input_dim, output_dim, alpha<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">1e-04</span>, epochs<span style="color: #333333">=</span><span style="color: #0000DD; font-weight: bold">400</span>, bias<span style="color: #333333">=</span><span style="color: #007020">True</span>):
+        <span style="color: #007020">self</span><span style="color: #333333">.</span>W <span style="color: #333333">=</span> np<span style="color: #333333">.</span>random<span style="color: #333333">.</span>randn(input_dim, output_dim) <span style="color: #333333">/</span> np<span style="color: #333333">.</span>sqrt(input_dim)
+        <span style="color: #007020">self</span><span style="color: #333333">.</span>has_bias <span style="color: #333333">=</span> bias
+        <span style="color: #007020">self</span><span style="color: #333333">.</span>b <span style="color: #333333">=</span> np<span style="color: #333333">.</span>zeros(output_dim)
+        <span style="color: #007020">self</span><span style="color: #333333">.</span>alpha <span style="color: #333333">=</span> alpha
+        <span style="color: #007020">self</span><span style="color: #333333">.</span>epochs <span style="color: #333333">=</span> epochs
+</pre></div>
+						<br />
+						<p>
+							The first function and undeniable the easiest one is the predict function. The predict function requires
+							the x array as input and computes the linear output \( \hat{\vec{y}} \).
+						</p>
+
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">predict</span>(<span style="color: #007020">self</span>, x):
+	<span style="color: #008800; font-weight: bold">return</span> x<span style="color: #333333">.</span>dot(<span style="color: #007020">self</span><span style="color: #333333">.</span>W) <span style="color: #333333">+</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>b
+</pre></div>
+						<br />
+						<p>
+							Next, the gradients with respect to the weights and the bias are defined as functions.
+						</p>
+
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">gradW</span>(<span style="color: #007020">self</span>, y, yhat, x):
+	<span style="color: #008800; font-weight: bold">return</span> x<span style="color: #333333">.</span>T<span style="color: #333333">.</span>dot(yhat <span style="color: #333333">-</span> y)
+
+    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">gradb</span>(<span style="color: #007020">self</span>, y, yhat):
+        <span style="color: #008800; font-weight: bold">return</span> (yhat <span style="color: #333333">-</span> y)<span style="color: #333333">.</span>sum(axis<span style="color: #333333">=</span><span style="color: #0000DD; font-weight: bold">0</span>)
+</pre></div>
+
+						<br />
+						<p>
+							Next, the cost function is defined. The \( \frac{1}{2} \) term is neglected, as the cost function is
+							only for monitoring the training's convergence.
+						</p>
+
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">cost</span>(<span style="color: #007020">self</span>, x, y):
+	yhat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>predict(x)
+	<span style="color: #008800; font-weight: bold">return</span> np<span style="color: #333333">.</span>mean((y <span style="color: #333333">-</span> yhat)<span style="color: #333333">**</span><span style="color: #0000DD; font-weight: bold">2</span>)
+</pre></div>
+
+						<br />
+						<p>
+							Next, a very useful method is defined: the partial_fit. This method takes a single step of gradient
+							descent, given a pair of input and output. This method can be used to train the model with custom
+							optimizers or even use a different learning rate etc. Notice that the bias term only gets updated
+							if the self.has_bias variable is true.
+						</p>
+
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">partial_fit</span>(<span style="color: #007020">self</span>, x, y):
+	yhat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>predict(x)
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>alpha <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>gradW(y, yhat, x)
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>has_bias <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>alpha <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>gradb(y, yhat)
+</pre></div>
+
+						<br />
+						<p>
+							And last but not least, the fit method, which trains the linear model on the given data for the
+							number of epochs defined. The fit method returns a list containing the cost per epoch.
+						</p>
+
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">fit</span>(<span style="color: #007020">self</span>, x, y):
+	costs <span style="color: #333333">=</span> []
+	<span style="color: #008800; font-weight: bold">for</span> ep <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #007020">self</span><span style="color: #333333">.</span>epochs):
+		yhat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>predict(x)
+		costs<span style="color: #333333">.</span>append(<span style="color: #007020">self</span><span style="color: #333333">.</span>cost(x, y))
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>alpha <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>gradW(y, yhat, x)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>has_bias <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>alpha <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>gradb(y, yhat)
+	<span style="color: #008800; font-weight: bold">return</span> costs
+</pre></div>
+
+				<br />
+				<hr>
+				<br />
+				<h2>Implementation in an Example Case</h2>
+					<p>
+						In this section, the linear regression model is used in an example case.
+					</p>
+					<h3>The Dataset</h3>
+					<p>
+						In this example, a dataset is artificially generated and the linear regression model is fit. The dataset
+						includes three variables: \( x_1, x_2, y \) with \( x_1, x_2 \) being random variables, pulled from two
+						gaussian shaped distributions. From the other hand, \( y \) is dependent on  \( x_1, x_2 \) and the
+						relationship between them is the following:
+						$$ y = 5.5 x_1 - 3.5 x_2 + 0.5 x_1 ^2 $$
+						As it can be seen, the relationship is not linear as there is the \( x_1 ^2 \) term. However, because the
+						term's coefficient is small compared to others, the relationship can be linearly approximated. It should be
+						interesting to see how the linear model performs on these data points.<br />
+						The variables \( x_1, x_2 \) are given means \( 0.5, -1 \) and variances \( 0.2, 0.3 \). A normally
+						distributed noise with variance \( 0.5 \) is added on the values of y, to add some variance.<br />
+						As it is computed in the jupyter notebook below, the correlation matrix between the variables
+						\( x_1, x_2, y \) is the following:
+						$$ Corr = \begin{bmatrix}
+							1 & 0.023 & 0.739 \\
+							0.023 & 1 & -0.591 \\
+							0.739 & -0.591 & 1 \\
+							\end{bmatrix} $$
+						As shown above, the random variables \( x_1, x_2 \) have zero correlation, while \( y \) has positive
+						correlation with \( x_1 \) and negative with \( x_2 \). <br />
+						Before the dataset is given to the linear model for training, it is standard scaled:
+						$$ x' = \frac{x - \bar{x}}{\sigma _x}, \ y' = \frac{y - \bar{y}}{\sigma _y} $$
+						The procedure described above can be found in cells [2]-[6] in the jupyter notebook below.
+					</p>
+
+					<h3>Jupyter Notebook</h3>
+					<div class="container" style="height: 100vh; width: 100%;">
+						<iframe src="/images/linReg/LinearRegressionExample.html"
+						style="height: 100%; width: 300%;"></iframe>
+					</div>
+					<br />
+					<br />
+
+					<h3>Results and Discussion</h3>
+					<p>
+						The model's training is succesfull, as the loss converges smoothly along the 400 epochs of training.
+						<figure>
+							<img src="/images/linReg/loss_per_epoch.png"/>
+							<figcaption>Fig. 2 - Model's Loss per epoch during the training process.</figcaption>
+						</figure>
+						To test the model's performance, a new data point which is not included in the training dataset is used
+						for prediction. The new data point is pulled from the same distributions of the variables used. Using the
+						model's predict() method, the prediction is calculated and is compared to the standard scaled true value.
+						$$ \hat{y} = 0.907, \ y' = 0.930$$
+						In order to set a comparison context, \( \hat{y} \) is rescaled:
+						$$ \hat{y}_\text{rescaled} = \hat{y} * \sigma _y + \bar{y} $$
+						The rescaled value is compared to the true value:
+						$$ \hat{y}_\text{rescaled} = 7.756, \ y = 7.796 $$
+						And the absolute percentage error is calculated:
+						<div class="container" style="height: 6em; width: 100%;">
+						$$ Err = \frac{|\hat{y}_\text{rescaled} - y|}{\text{max}(y) - \text{min}(y)} 100 \% \rightarrow
+						Err = 0.45 \% $$
+						</div>
+						The error is relatively small and thus, the model can approximate the relationship given adequately.<br />
+					</p>
+
+				<br />
+				<hr>
+				<br />
+
+				<h2>Conclusion</h2>
+					<p>
+						In conclusion, in this mini-project a linear model was created from scratch, in the form of a callable object
+						in order for it to be usable in any case. In addition, the model was fit onto an artificially generated
+						dataset to test its functionallity and effectiveness.
+					</p>
+				<br />
+				<hr>
+				<br />
+				<h2>References</h2>
+					<p>Montgomery, D. C., Peck, E. A., & Vining, G. G. (2012). Introduction to Linear Regression Analysis (5th ed.). Wiley.</p>
+					<p>Kuhn, M., & Johnson, K. (2013). Applied Predictive Modeling. Springer.</p>
+			<br />
+			<hr>
+			<br />
+			<a href="/projects.html" class="button">Back to Projects</a>
+			<br />
+			<br />
+	
+	</div>
+
+	</body>
+</html>

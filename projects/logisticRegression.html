@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logistic Regression Model in Python</title>
+	<meta property="og:image" content="https://avatars.githubusercontent.com/u/9919?s=200&v=4">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400&display=swap">
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'>  
+	<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+</head>
+<body>
+    <div id="container">
+        <div id="sidebar">
+
+            <div id="sidebar-content">
+                <ul style="list-style-type: none;">
+                    <li><a href="/index.html">Home</a></li>
+                    <li><a href="/projects.html">Projects</a></li>
+                    <li><a href="/info.html">About Me</a></li>
+                    <li><a href="/contact.html">Contact</a></li>
+                </ul>
+            </div>
+
+            <div id="sidebar-contact-icons">
+                <a href="https://www.linkedin.com/in/georgios-tsamis-799992212/">
+                    <i class='fa fa-linkedin-square' style="font-size:2em; margin-right:1em;"></i>
+                </a>
+
+                <a href="https://github.com/TsamisG">
+                    <i class='fa fa-github' style="font-size:2em; margin-right:1em;"></i>
+                </a>
+
+                <a href="mailto:tsamis.g@outlook.com">
+                    <i class='fa fa-envelope-square' style="font-size:2em;"></i>
+                </a>
+
+                
+            </div>
+            
+        </div>
+
+		<div id="content">
+			<h1>Logistic Regression Model in Python</h1>
+				<p>In this mini-project, a Logistic Regression model is created from scratch in Python.
+					The model is programmed as a callable object in a simple form, so it can be used easily in
+					any project. This projects steps onto the <a href="linearRegression.html">Linear Regression Model in
+					Python</a>
+				</p>
+				<p> Logistic regression falls into the category of Supervised Learning 
+					and its goal is to predict the probability that an instance belongs to a given class or not
+					(Binary Classification).</p><br />
+
+			<br />
+			<hr>
+			<br />
+				<h2>A Brief Introduction</h2>
+					<p>
+						In Logistic Regression, the task is to predict whether an input instance belongs to given class or
+						not. In fact, the logistic regression model outputs the probability that the input instance belongs
+						to a given class. As the output is binary (the instance belongs to the given class or not), if the
+						output probability is higher than 0.5, then it can be assumed that the instance does belong in the
+						class (output becomes 1). If not, it can be assumed that it does not belong in the class (output
+						becomes 0).<br />
+						The logistic regression model, uses the linear regression as a basis, and then maps the output of the
+						regression to a probability, using the sigmoid function, as it is shown in the next section.<br />
+						To create a notation context, \( x \) is used to notate the input instance, while \( y \) is used
+						to notate the binary label of the input instance (0 or 1). \( p_y \) is used to notate the probability
+						that \( x \) belongs to the given class. <br />
+						By collecting data about \( x \) and the corresponding labels \( y \), the matrices \( X \) and \( Y \)
+						are formed, dimensioned \( N \times D \) and \( N \times 1 \) respectively,
+						where \( N \) is the number of data points collected and \( D \) is the number of features the input
+						instance \( x \) has.<br />
+						The goal of Logistic Regression is to linearly seperate the data points \( X \).
+					</p>
+				<br />
+				<hr>
+				<br />
+				<h2>Mathematical Formulation</h2>
+					<h3>The Linear Model</h3>
+						<p>
+							Using a linear model, the data points \( X \) are linearly seperated. This implies the assumption
+							that a line (or a hyperplane in general) is able to separate the data points \( X \) into two groups:
+							those that belong to the class and those that do not. The straight line (or hyperplane) is given by
+							the following equation:
+							$$ y = \vec{w}^T \vec{x} $$
+							Where: \( \vec{x} \) is a column vector, dimensioned \( D \times 1 \), \( y \) is the binary label
+							of whether the input belongs to the class, and \( \vec{w} \) is a column vector dimensioned
+							\( D \times 1 \). The vector \( \vec{w} \)
+							is a vector of weights, whose values determine the coefficients of the linear separator.
+							This simple linear relationship assumes a zero mean, which is not always the case. To elaborate, an input vector
+							\( \vec{x} = \vec{0} \) produces an output \( y = 0 \), which is not always the case.
+							This is why an intercept or a bias term is added to form:
+							$$ y = \vec{w}^T \vec{x} + b $$
+							The bias is a real valued number, which shifts the linear seperator
+							by its value. In fact, the linear equation of the separator presented
+							above represents the weighted sum of input features plus the bias:
+							$$ y = w_1 x_1 + w_2 x_2 + ... + w_d x_d + b $$
+							The set of weights and bias are also called parameters of the model.
+							<br />
+							The logistic regression model, uses the output of the linear model together with the sigmoid function,
+							in order to output the probability (a value between 0 and 1) that the input instance belongs to a class.
+							The sigmoid function (also known as the logistic function), is described by the following formula:
+							$$ \sigma (a) = \frac{1}{1 + e^{-a}} $$
+							The sigmoid function's plot can be seen in Fig. 1 below.
+							<figure>
+								<img src="/images/logReg/sigmoidFun.png" style="height:20em;"/>
+								<figcaption>Fig. 1 - The sigmoid function's plot.</figcaption>
+							</figure>
+
+							Thus, the probability that an instance belongs to a class is modeled using the logistic regression model:
+							$$ p_y = \sigma (\vec{w}^T \vec{x} + b) $$							
+							For short, the output of the linear model is notated with the letter \( a \), which stands for "activation":
+							$$ a = \vec{w}^T \vec{x} + b $$
+							Notice how for \( a = 0 \), the sigmoid function outputs \( 0.5 \). This means that for large activations,
+							the probability that an instance belongs to the class tends to \( 1 \), while for small activations,
+							the probability tends to \( 0 \). In this sense, the model is more confident about the classification
+							the further away from 0 the activation is.<br />
+							From now on, the letter \( y \) is used to notate the binary label of an instance.<br />
+							Assuming the parameters are known, to make a prediction for \( y \), given an input
+							vector of features \( \vec{x} \), the output of the logistic model stated above is rounded towards the
+							nearest integer, which is either 0 or 1:
+							$$ \hat{y} = \text{round}(p_y) $$
+						</p>
+						<h3>The Loss Function</h3>
+						<p>
+							Having said the above, the goal is to find the parameters that produce predictions for the data points'
+							labels as close to the true ones as possible. In this sense, a loss function can be introduced,
+							that quantifies the error of the model's prediction:
+							<div class="container" style="height: 5em; width: 100%;">
+							$$ \text{Loss} = - ( y log(p_y) + (1-y) log(1-p_y) ) $$
+							</div>
+							This loss function is known as the "Cross-Entroy Loss".
+							Given the aforementioned loss function (which is also notated with the letter J), the goal is to minimize
+							the total loss over all of the data points,
+							or to find the minimum sum of Losses given the parameters:
+							<div class="container" style="height: 5em; width: 100%;">
+							$$ \text{min:} \ J = - \sum _{i=1} ^N (y log(p_y) + (1-y) log(1-p_y)) $$
+							</div>
+							It can be easily shown that the log-likelihood of the predictions is equal to the negative cross-entropy
+							loss:
+						
+							$$ l = \prod _{i=1}^N p_y^y (1 - p_y)^{1-y} $$
+							<div class="container" style="height: 5em; width: 100%;">
+							$$ log(l) = \sum _{i=1} ^N (y log(p_y) + (1-y) log(1-p_y)) = - L$$
+							</div>
+							Thus, by minimizing the cross-entropy loss, the log-likelihood of the predictions is maximized.
+						</p>
+						<h3>Loss Minimization through Gradient Descent</h3>
+						<p>
+							<br />
+							To mimize the total loss, the Gradient Descent method is used.
+							This means that to find the parameters that correspond to the minimum Loss, an iterative process
+							is implemented. At each iteration, the parameters are updated by taking a step into the oposite
+							direction of the gradient, as the gradient points to the direction of the maximum:
+							$$ W_{t+1} = W_t - \alpha \nabla _W J $$
+							$$ b_{t+1} = b_t - \alpha \nabla _b J $$
+							The gradients with respect to the weights and the bias can be easily derived:
+							$$ \nabla _W J = X^T (\hat{Y} - Y) $$
+							$$ \nabla _b J = \sum _{i=1} ^N (\hat{y}_i - y_i) $$
+							The iterative Loss minimization process is also called "training" or "learning session" and is repeated
+							until the Loss converges to a minimum. The learning iterations are also called "epochs".
+							The gradient descent step includes a user defined parameter (also known as hyperparameter): the learning
+							rate \( \alpha \). The learning rate defines the magnitude of the step at each iteration and has to be
+							defined accordingly. A large learning rate may lead to overshoot in the learning process and miss the
+							minimum, while a small learning rate may lead to excessively long training sessions. In Fig. 2, a
+							visualization of the Loss function J and the optimal parameters, which correspond to the global minimum
+							is displayed.
+							<figure>
+								<img src="/images/linReg/loss_gradient.png" style="height:20em;"/>
+								<figcaption>Fig. 2 - A visualization of the Loss function and the optimal parameter values
+									that correspond to the global minimum.</figcaption>
+							</figure>
+						</p>
+						<h3>Weights Initialization</h3>
+						<p>
+							In Logistic Regression, the weights can be initialized by either using zero-initialization, or using a
+							random initialization. In this project, the zero initialization is implemented.
+						</p>
+
+				<br />
+				<hr>
+				<br />
+				<h2>Python Implementation</h2>
+					<p>
+						The logistic regression model is added in the "LinearRegression.py" file, which was introduced in
+						<a href="linearRegression.html">Linear Regression Model in Python</a>. 
+						"LinearRegression.py" can be found in my github repository
+						<a href="https://github.com/TsamisG/machineLearningModels">machineLearningModels</a>.
+						The logistic regression model
+						is also programmed as a callable object, and the format is kept the same.<br />
+						First of all, the numpy module is imported and the object LogisticRegressor is defined.
+						To initiate the model, the input dimension D is required (referenced as input_dim). As a default, the
+						learning rate is set to \( 10^{-4} \), the training epochs are set to 400 and the option for the model
+						to have a bias term is set to True.<br />
+						The weight matrix and the bias are zero-initialized.
+					</p>
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-weight: bold">class</span> <span style="color: #BB0066; font-weight: bold">LogisticRegressor</span>:
+    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">__init__</span>(<span style="color: #007020">self</span>, input_dim, alpha<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">1e-04</span>, epochs<span style="color: #333333">=</span><span style="color: #0000DD; font-weight: bold">400</span>, bias<span style="color: #333333">=</span><span style="color: #007020">True</span>):
+        <span style="color: #007020">self</span><span style="color: #333333">.</span>W <span style="color: #333333">=</span> np<span style="color: #333333">.</span>random<span style="color: #333333">.</span>randn(input_dim,) <span style="color: #333333">/</span> np<span style="color: #333333">.</span>sqrt(input_dim)
+        <span style="color: #007020">self</span><span style="color: #333333">.</span>has_bias <span style="color: #333333">=</span> bias
+        <span style="color: #007020">self</span><span style="color: #333333">.</span>b <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">0</span>
+        <span style="color: #007020">self</span><span style="color: #333333">.</span>alpha <span style="color: #333333">=</span> alpha
+        <span style="color: #007020">self</span><span style="color: #333333">.</span>epochs <span style="color: #333333">=</span> epochs
+</pre></div>
+
+
+					<br />
+					<p>
+						The first function is the forward function, which outputs the probability that the input
+						belongs to the class \( p_y \).
+					</p>
+
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">forward</span>(<span style="color: #007020">self</span>, x):
+	a <span style="color: #333333">=</span> x<span style="color: #333333">.</span>dot(<span style="color: #007020">self</span><span style="color: #333333">.</span>W) <span style="color: #333333">+</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>b
+	<span style="color: #008800; font-weight: bold">return</span> <span style="color: #6600EE; font-weight: bold">1.</span><span style="color: #333333">/</span>(<span style="color: #6600EE; font-weight: bold">1.</span> <span style="color: #333333">+</span> np<span style="color: #333333">.</span>exp(<span style="color: #333333">-</span>a))
+</pre></div>
+					<br />
+					<p>
+						Next, the predict function is implemented. It forward passes the input first to calculate the probability
+						and then rounds the probability to a 0 or 1.
+					</p>
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">predict</span>(<span style="color: #007020">self</span>, x):
+	p_y <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(x)
+	<span style="color: #008800; font-weight: bold">return</span> np<span style="color: #333333">.</span>round(p_y)
+</pre></div>
+
+
+					<br />
+					<p>
+						Next, the gradients with respect to the weights and the bias are defined as functions.
+					</p>
+
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">gradW</span>(<span style="color: #007020">self</span>, y, yhat, x):
+	<span style="color: #008800; font-weight: bold">return</span> x<span style="color: #333333">.</span>T<span style="color: #333333">.</span>dot(yhat <span style="color: #333333">-</span> y)
+
+    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">gradb</span>(<span style="color: #007020">self</span>, y, yhat):
+        <span style="color: #008800; font-weight: bold">return</span> (yhat <span style="color: #333333">-</span> y)<span style="color: #333333">.</span>sum(axis<span style="color: #333333">=</span><span style="color: #0000DD; font-weight: bold">0</span>)
+</pre></div>
+
+
+					<br />
+					<p>
+						Next, the cross-entropy loss function is defined.
+					</p>
+
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">cross_entropy</span>(<span style="color: #007020">self</span>, y, p_y):
+	N <span style="color: #333333">=</span> <span style="color: #007020">len</span>(y)
+	E <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">0</span>
+	<span style="color: #008800; font-weight: bold">for</span> n <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(N):
+		<span style="color: #008800; font-weight: bold">if</span> y[n] <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">0</span>:
+			E <span style="color: #333333">-=</span> (<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>y[n])<span style="color: #333333">*</span>np<span style="color: #333333">.</span>log(<span style="color: #0000DD; font-weight: bold">1</span><span style="color: #333333">-</span>p_y[n])
+		<span style="color: #008800; font-weight: bold">else</span>:
+			E <span style="color: #333333">-=</span> y[n]<span style="color: #333333">*</span>np<span style="color: #333333">.</span>log(p_y[n])
+	<span style="color: #008800; font-weight: bold">return</span> E
+</pre></div>
+
+
+
+					<br />
+					<p>
+						Next, the partial fit and the fit methods are defined. Notice that the bias term only gets updated
+						if the self.has_bias variable is true. The fit function returns the loss per iteration.
+					</p>
+
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">partial_fit</span>(<span style="color: #007020">self</span>, x, y):
+	p_y <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(x)
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>alpha <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>gradW(y, p_y, x)
+	<span style="color: #007020">self</span><span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>has_bias <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>alpha <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>gradb(y, p_y)
+
+    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">fit</span>(<span style="color: #007020">self</span>, x, y):
+	costs <span style="color: #333333">=</span> []
+	<span style="color: #008800; font-weight: bold">for</span> ep <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #007020">self</span><span style="color: #333333">.</span>epochs):
+		p_y <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(x)
+		costs<span style="color: #333333">.</span>append(<span style="color: #007020">self</span><span style="color: #333333">.</span>cross_entropy(y, p_y))
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>W <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>alpha <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>gradW(y, p_y, x)
+		<span style="color: #007020">self</span><span style="color: #333333">.</span>b <span style="color: #333333">-=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>has_bias <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>alpha <span style="color: #333333">*</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>gradb(y, p_y)
+	<span style="color: #008800; font-weight: bold">return</span> costs
+</pre></div>
+						
+					<br />
+					<p>
+						Finally, the classification rate method is defined, which returns the model's mean of 
+						correct classifications.
+					</p>
+
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;max-width:100%;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">classification_rate</span>(<span style="color: #007020">self</span>, x, y):
+	yhat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>predict(x)
+	<span style="color: #008800; font-weight: bold">return</span> np<span style="color: #333333">.</span>mean(yhat <span style="color: #333333">==</span> y)
+</pre></div>
+
+			<br />
+			<hr>
+			<br />
+			<h2>Implementation in an Example Case</h2>
+				<p>
+					In this section, the logistic regression model is used in an example case.
+				</p>
+					<h3>The Dataset</h3>
+					<p>
+						In this example, a dataset is artificially generated and the logistic regression model is fit. The dataset
+						includes two random variables: \( x_1, x_2 \) pulled from the normal distribution, which correspond to
+						two different features of the input \( x \). To define two classes,
+						the first class has different means from the second:
+						$$ \bar{x}_{class=0} = (-4, 0), \bar{x}_{class=1} = (0, 4) $$
+						The class label of each class is notated by \( y \) as usual. The datapoints are generated in cell [2].
+						In cell [3], the datapoints are plotted, and the different classes are obvious to the human eye. Interestingly,
+						an outlier even shows up in the dataset (the red 'x' at around \( (-3, 2)\) ).
+						
+					</p>
+
+					<h3>Jupyter Notebook</h3>
+					<div class="container" style="height: 100vh; width: 100%;">
+						<iframe src="/images/logReg/LogisticRegressionExample.html"
+						style="height: 100%; width: 300%;"></iframe>
+					</div>
+					<br />
+					<br />
+
+					<h3>Results and Discussion</h3>
+					<p align="justify">
+						The model's training is succesfull, as the loss converges smoothly along the 400 epochs of training.
+						<figure>
+							<img src="/images/logReg/loss_per_epoch.png" style="height:20em;"/>
+							<figcaption>Fig. 3 - Model's Loss per epoch during the training process.</figcaption>
+						</figure>
+						The classification rate is \( 0.99 \), as the model fails to classify the outlier. As the variable space
+						is two-dimensional, the linear separator is a straight line, which can be plotted using the model's weights
+						and bias. The separator's equation is derived from the activation of the logistic regression model, by
+						setting the activation to 0:
+						$$ \vec{w}^T \vec{x} + b = 0 \rightarrow w_1 x_1 + w_2 x_2 + b = 0 $$
+						$$ x_2 = - \frac{w_1 x_1 + b}{w_2} $$
+						<figure>
+							<img src="/images/logReg/linSeparator.png" style="height:20em;"/>
+							<figcaption>Fig. 4 - The linear separator in a 2D case is a straight line.</figcaption>
+						</figure>
+
+
+						To test the model's performance, a new data point which is not included in the training dataset is used
+						for prediction. The new data point is pulled from the same distribution of the variables used for an
+						arbitrary class. As an example, a datapoint from the class=1 is pulled. Using the
+						model's predict() method, the prediction is calculated and is compared to the ground truth.
+						As it is shown in Fig. 5, the logistic regression model successfully classifies the test point.
+						<br />
+						<figure>
+							<img src="/images/logReg/testPoint.png" style="height:20em;"/>
+							<figcaption>Fig. 5 - The linear separator in a 2D case is a straight line.</figcaption>
+						</figure>
+						
+					</p>
+
+			<br />
+			<hr>
+			<br />
+			<h2>Conclusions</h2>
+				<p>
+					In conclusion, in this mini-project a logistic regression model was created from scratch,
+					in the form of a callable object in order for it to be usable in any case.
+					In addition, the model was fit onto an artificially generated
+					dataset to test its functionallity and effectiveness.
+				</p>
+			<br />
+			<hr>
+			<br />
+			<h2>References</h2>
+					<p>Kleinbaum, D. G., & Klein, M. (2010). Logistic Regression: A Self-Learning Text (3rd ed.). Springer.</p>
+					<p>Kuhn, M., & Johnson, K. (2013). Applied Predictive Modeling. Springer.</p>
+
+			<br />
+			<hr>
+			<br />
+			<a href="/projects.html" class="button">Back to Projects</a>
+			<br />
+			<br />
+	
+	</div>
+
+	</body>
+</html>

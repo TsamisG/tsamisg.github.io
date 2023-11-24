@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MountainCar - Q Value Approximation & SARSA</title>
+	<meta property="og:image" content="https://avatars.githubusercontent.com/u/9919?s=200&v=4">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400&display=swap">
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'>  
+	<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+</head>
+<body>
+    <div id="container">
+        <div id="sidebar">
+
+            <div id="sidebar-content">
+                <ul style="list-style-type: none;">
+                    <li><a href="/index.html">Home</a></li>
+                    <li><a href="/projects.html">Projects</a></li>
+                    <li><a href="/info.html">About Me</a></li>
+                    <li><a href="/contact.html">Contact</a></li>
+                </ul>
+            </div>
+
+            <div id="sidebar-contact-icons">
+                <a href="https://www.linkedin.com/in/georgios-tsamis-799992212/">
+                    <i class='fa fa-linkedin-square' style="font-size:2em; margin-right:1em;"></i>
+                </a>
+
+                <a href="https://github.com/TsamisG">
+                    <i class='fa fa-github' style="font-size:2em; margin-right:1em;"></i>
+                </a>
+
+                <a href="mailto:tsamis.g@outlook.com">
+                    <i class='fa fa-envelope-square' style="font-size:2em;"></i>
+                </a>
+
+                
+            </div>
+            
+        </div>
+
+		<div id="content">
+			<h1>MountainCar - Q Value Approximation & SARSA</h1>
+				<p>In this mini-project, the OpenAI's MountainCar Gym environment is solved using
+					a Linear Regression model -enhanced with RBF Kernels- to approximate the Q-Value.
+					SARSA is used as the Learning algorithm.</p>
+				<p> In this OpenAI's Gym environment, a car is stochastically placed at the bottom of a
+					sinusoidal valley, with the only possible actions being the accelerations
+					that can be applied to the car in either direction. The goal is for the car the reach
+					the top of the right hill. The acceleration of the car is less than the one required
+					to climb the hill. Thus, the agent has to accelerate the car back and fourth strategically,
+					in order to use the car's momentum to climb the right hill. The Discrete version of MountainCar
+					is used.<br />
+					See more: 
+					<a href="https://www.gymlibrary.dev/environments/classic_control/mountain_car/"> Mountain Car - Gym Documentation</a></p>
+
+				<br />
+				<hr>
+				<br />
+			<h2>Analysis and Design</h2>
+				<h3>The Environment</h3>
+					<p>In the MountainCar environment, the agent is tasked to control the car. The state space contains
+						the x-position of the car and its linear velocity:
+						$$S = \{ pos, vel \}$$
+						The position is bounded in \( [-1.2, 0.6] \) and the velocity is bounded in \( [-0.07, 0.07] \)
+						(units in SI).<br />
+						The agent's possible actions are three discrete: accelerate to the left (0), don't accelerate (1)
+						and accelerate to the right (2):
+						$$A = \{ 0, 1, 2 \}$$
+						The goal is for the agent to move the car to the top of the right hill, which is positioned
+						at \( x=0.5 \). When the car reaches the goal, the episode is terminated.<br />
+						Each episode's reward is calculated as such: at each time step the agent receives -1 reward. Thus,
+						the sooner the agent reaches the goal, the higher the total reward it receives.
+					</p>
+
+					<h3>The Q-Value Approximation Model</h3>
+					<p>In order to implement a learning algorithm that will train the agent, a function that maps the state
+						and the action to the expected return (the Q-Value) is required. As the agent's actions are discrete,
+						a Linear Regression Model is used for each action; each model maps the state to a value for its
+						action. Preceding the Linear Regression models, a standard scaler is used to scale the state and
+						a set of RBF Kernels is used to transform the scaled state. The purpose is to allow the linear models
+						to capture the state space's non-linearities. To be more specific:
+						<ul>
+							<li>The state is standard scaled.</li>
+							<li>The scaled state is transformed into a vector of feature values, using RBF Kernels.</li>
+							<li>The feature values are fed into the Linear Regression models.</li>
+							<li>Each model's output is the Q-Value for the input state and the model's action.</li>
+						</ul>
+						<br />
+						<figure>
+						<img src="/images/mountainCar/diagram1.png"/>
+							<figcaption>Fig. 1 - Block Diagram of the Q Value Approximation Model.</figcaption>
+						</figure>
+						<br />
+					</p>
+					<p>
+						Before the training session begins, a number of state samples is gathered. This can be achieved by
+						utilizing the environment's observation_space.sample() method, which returns a random state. This method
+						is called until the number of samples is the desired one. This is achieved using the gather_samples_s
+						method in cell [3], which is called in cell [5].
+						<br />
+						<br />
+						The standard scaler and the RBF Kernels are fit onto the samples, meaning the scaler computes the mean
+						and the standard deviation and a predefined number of sample points are chosen as the feature exemplars
+						for the RBF Kernels.
+						The number of RBF Kernels and their gamma values are hyperparameters to be chosen during the model's design
+						processes. As in most cases, the designer has to experiment with different settings to find the optimal
+						set of values. In this case, two RBF Kernels are used with gamma values:
+						\( \{ \gamma _1 = 1, \gamma _2 = 0.5 \} \).
+						<br />
+						<br />
+						The linear model presented in <a href="linearRegression.html">"Linear Regression Model in Python"</a>
+						is implemented three times; one for each discrete action. The weights are zero-initialized as Optimistic
+						Initial Values. To elaborate: zero initial weights and bias produce a zero output. As the expected
+						return of each state and action combination is negative (as the rewards are always negative), the
+						zero-weights initialization is optimistic (outputs higher Q-Values than expected). This helps the
+						convergence of the learning procedure. The Standard Scaler, the Featurizer (set of RBF Kernels) and
+						the Linear Regression models are instanced in cell [6].
+					</p>
+					<h3>The Learning Algorithm - SARSA</h3>
+					<p>
+						The SARSA algorithm is implemented for the agent's learning. For this project, SARSA is prefered
+						in comparison to Q-Learning, as SARSA offers more opportunities for exploration. The exploration element
+						is crucial in the MountainCar environment, as the goal is difficult to reach by the initially untrained
+						agent. SARSA implements the following Q-Value update, implemented using Stochastic Gradient Descent:
+						<div class="container" style="height: 5em; width: 100%;">
+						$$ Q(s,a) \leftarrow Q(s,a) + \alpha (r + \gamma Q(s_2, a_2) - Q(s,a)) $$
+						</div>
+						The agent chooses the next action using the Epsilon-Greedy policy of the argmax of the Q-Values of the
+						state, over the three possible actions. The Epsilon-Greedy policy helps the agent explore new combinations
+						of states and actions.
+						<br />
+						<br />
+						At each training episode, the environment is reset. Then, at each agent's step, the three linear models
+						predict a Q-Value corresponding to the state. The argmax of the predictions over the actions is used
+						in the Epsilon-Greedy method to choose the next action. The agent takes a step in the environment using
+						the selected action. By obtaining the step's reward, the return is calculated and the algorithm takes
+						a gradient step to update the corresponding model's parameters (weights and bias). This procedure is
+						repeated for the number of training episodes. The learning procedure is implemented in cell [7].
+					</p>
+
+					<h3>Hyperparameter Selection</h3>
+					<p>
+						As in most machine learning problems, the hyperparameters' tuning problem is posed. For this case,
+						the algorithm's designer may approach the solution by experimenting with different hyperparameter values.
+						The settings used in this case are briefly presented below:
+						<ul>
+							<li>Maximum Steps per Episode: Set to 1000. This value should not be too small, as the agent has to
+								be able to experiment with different actions. If each episode ends too fast, the
+								agent will not be able to learn.</li>
+							<li>Number of Samples: Set to 200000. A small sample size will lead to poor scaler and featurizer.
+								A large sample size may be uneccessary and computationally heavy.</li>
+							<li>Number of Features per RBF Kernel: Set to 10. Has to be large enough to capture the state-space's
+								non-linearities. Large values lead to heavier Linear Regression models.</li>
+							<li>Number of Training Episodes: Set to 200. The training episodes have to be enough to let
+								the agent train. Values higher than needed will lead to uneccessary long training sessions.</li>
+							<li>Discount Factor - \( \gamma \): Set to 0.99. This should be set close to 1, as
+								the agent should be trained to place emphasis on long-term rewards (the total reward).</li>
+							<li>Epsilon-Greedy Value - \( \epsilon \): Set to 0.1. This corresponds to a 10%
+								chance that the agent chooses an action randomly. This typical value offers a good
+								exploration-exploitation balance for this case.</li>
+							<li>Learning Rate - \( \alpha \): Set to 0.01. Small learning rates will lead to longer training
+								sessions, as Stochastic Gradient Descent is used. Large learning rates will lead to overshooting
+								and missing the minimum.</li>
+						</ul>
+					</p>
+
+
+				<br />
+				<hr>
+				<br />
+				<h2>Python Implementation in Jupyter Notebook</h2>
+
+				<div class="container" style="height: 100vh; width: 100%;">
+					<iframe src="/images/mountainCar/MountainCar_RBFLinearRegression_SARSA.html"
+					style="height: 100%; width: 300%;"></iframe>
+				</div>
+
+				<br />
+				<hr>
+				<br />
+
+				<h2>Results and Final Thoughts</h2>
+				<p>The trained agent is tested in a new environment (See cell [10] above). During the testing
+					episode, the agent chooses the next action greedily, using the argmax of the estimated Q Values. The
+					Epsilon-Greedy policy is not needed in the testing episode as there is no need for exploration, as the
+					agent's model will not be updated.
+					The agent achieves the goal
+					while obtaining a Reward of -84. This means it reached the goal in 84 time steps, which is satisfactory.
+					The result is displayed in the animation below. The animation is created by saving the frame of each step in
+					cell [10]. The frames are then saved into a gif file using the Pillow library in cell [11].
+				</p>
+				<figure>
+					<img src="/images/mountainCar/MountainCarTesting.gif"/>
+					<figcaption>Fig. 2 - The agent's performance in a testing episode.</figcaption>
+				</figure>
+				<br />
+				<p>As the reward-per-episode plot is choppy due to the stochasticity of the agent's spawn
+					and the epsilon-greedy policy, the running average reward plot is prefered. In addition, the goal is to train
+					the agent to have a better "average" performance, meaning that in some episodes, the agent may perform
+					better than others. Thus, the running average reward plot contains more useful information
+					than the reward-per-episode plot. As it is shown, the average reward of the agent increases during
+					the training.
+				</p>
+				<figure>
+					<img src="/images/mountainCar/runningAvg.png" style="height: 20em"/>
+					<figcaption>Fig. 3 - The running average reward over the training episodes.</figcaption>
+				</figure>
+				<br />
+
+				<p>An interesting plot is displayed below; the action of the agent
+					based on the state (created in the cells [12] and [13]). This is usually impossible to plot, as
+					in most cases the state is composed of more than two states. However, in this case the state consists
+					only of the car's x-position and its velocity. To create this plot, the argmax of the Q-Values for a
+					grid of states is stored in a matrix, which is then visualized using the imshow command of the pyplot package.
+					Each color corresponds to a different action (3 discrete actions in this case). As it is displayed,
+					most of the actions of the agent make sense; for example, the agent pushes the car to the right for positive
+					x-positions and positive velocity. However, some actions are not optimal; for example, the agent pushes
+					the car to the right for zero x-position and negative or zero velocity. This may lead to the agent getting
+					stuck in a scenario where the car is positioned on the bottom of the right hill with zero velocity trying
+					to accelerate the car to the right, for which the car's torque is not enough. 
+				</p>
+				<figure>
+					<img src="/images/mountainCar/actionState.png" style="height: 20em"/>
+					<figcaption>Fig. 4 - The model's perception of the best action based on the state.</figcaption>
+				</figure>
+				<br />
+				<p>Another useful plot is the visualization of the Value of each state V(s). However,
+					the Cost-to-Go value (equivalent to -V(s)) is prefered in this case as it dispays the number of steps
+					the agent estimates it needs to reach the goal. This is true for this case as at each time step the agent
+					receives -1 reward. Thus, -V(s), which is the negative estimated value of each state, corresponds to the
+					number of steps the agent needs to complete the task. As it can be seen in the contour plot below, for positions
+					close to the goal (positioned at 0.5), the estimated number of steps for completion is small; especially when the
+					velocity is high. The maximum number of steps for completion lies around the agent's spawn point: with position
+					around -0.4 and zero velocity.
+				</p>
+				<figure>
+					<img src="/images/mountainCar/costToGo.png" style="height: 20em"/>
+					<figcaption>Fig. 5 - Contour plot of the Cost-to-Go values i.e. the number of steps required at each
+						state to reach the goal state.</figcaption>
+				</figure>
+				<br />
+				<p>Overall, the presented algorithm trains the agent to solve the given environment succesfully.
+					Using two RBF Kernels and a Linear Regression model for each discrete action, the agent is trained in only
+					200 episodes. This is a good example of how powerful Linear models with RBF Kernels (also known as RBF
+					Networks) can be in solving non-linear problems.
+				</p>
+
+
+				<br />
+				<hr>
+				<br />
+				<h2>References</h2>
+
+				<p>Rummery, G. & Niranjan, Mahesan. (1994). On-Line Q-Learning Using Connectionist Systems. Technical Report CUED/F-INFENG/TR 166.</p>
+				<p>Moody, J. and Darken, C.J. (1989) Fast Learning in Networks of Locally-Tuned Processing Units. Neural Computation, 1, 281-294.</p>
+				<p>Tokic, Michel. (2010). Adaptive ε-Greedy Exploration in Reinforcement Learning Based on Value Differences. 203-210. 10.1007/978-3-642-16111-7_23. </p>
+				<p>Sutton, R. S., & Barto, A. G. (1998). Reinforcement Learning: An Introduction (1st ed.). MIT Press.</p>
+
+				<br />
+				<hr>
+				<br />
+				<a href="/projects.html" class="button">Back to Projects</a>
+				<br />
+				<br />
+	
+	</div>
+
+	</body>
+</html>

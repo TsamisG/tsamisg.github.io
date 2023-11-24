@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lunar Lander - Q-Value Approximation using Neural Networks & Q-Learning</title>
+	<meta property="og:image" content="https://avatars.githubusercontent.com/u/9919?s=200&v=4">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400&display=swap">
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'>  
+	<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+</head>
+<body>
+    <div id="container">
+        <div id="sidebar">
+
+            <div id="sidebar-content">
+                <ul style="list-style-type: none;">
+                    <li><a href="/index.html">Home</a></li>
+                    <li><a href="/projects.html">Projects</a></li>
+                    <li><a href="/info.html">About Me</a></li>
+                    <li><a href="/contact.html">Contact</a></li>
+                </ul>
+            </div>
+
+            <div id="sidebar-contact-icons">
+                <a href="https://www.linkedin.com/in/georgios-tsamis-799992212/">
+                    <i class='fa fa-linkedin-square' style="font-size:2em; margin-right:1em;"></i>
+                </a>
+
+                <a href="https://github.com/TsamisG">
+                    <i class='fa fa-github' style="font-size:2em; margin-right:1em;"></i>
+                </a>
+
+                <a href="mailto:tsamis.g@outlook.com">
+                    <i class='fa fa-envelope-square' style="font-size:2em;"></i>
+                </a>
+
+                
+            </div>
+            
+        </div>
+
+		<div id="content">
+
+			<h1>Lunar Lander - Q-Value Approximation using Neural Networks & Q-Learning</h1>
+
+				<p>In this mini-project, the OpenAI's Lunar Lander Gym environment is solved using
+					a Neural Network to approximate the Q-Value. A memory-replay technique is implemented to train
+					the model.
+					Q-Learning is used as the Learning algorithm and Momentum RMSProp is used to assist
+					the learning convergence.</p>
+				<p> This OpenAI's Gym environment is a classic rocket trajectory optimization problem.
+					According to Pontryagin's maximum principle, it is optimal to fire the engine at full throttle or
+					turn it off. This is the reason why this environment has discrete actions: engine on or off. The
+					goal is to safely land the vehicle on the surface using four discrete actions at each step:
+					do nothing, fire left orientation engine, fire main engine, fire right orientation engine. The
+					landing pad is always at coordinates (0,0). Landing outside of the landing pad is possible.
+					The lander's fuel is infinite.<br />
+					See more: 
+					<a href="https://www.gymlibrary.dev/environments/box2d/lunar_lander/"> Lunar Lander - Gym Documentation</a></p>
+			
+			<br />
+			<hr>
+			<br />
+			<h2>Analysis and Design</h2>
+
+				<h3>The Environment</h3>
+				<p>In the Lunar Lander environment, the agent is tasked with controlling the lander vehicle.
+					The state space contains the vehicle's horizontal and vertical position and velocities, the vehicle's
+					orientation angle and angular speed, and two boolean variables that represent whether each leg is in
+					contact with the ground or not.
+					$$S = \{ x, y, \dot{x}, \dot{y}, \theta, \dot{\theta}, l_1, l_2 \}$$
+					The bounds for the real-valued observations are (units in SI):
+					<ul>
+						<li>\( x: [-1.5, 1.5] \)</li>
+						<li>\( y: [-1.5, 1.5] \)</li>
+						<li>\( \dot{x}: [-5, 5] \)</li>
+						<li>\( \dot{y}: [-5, 5] \)</li>
+						<li>\( \theta: [-\pi, \pi] \)</li>
+						<li>\( \dot{\theta}: [-5, 5] \)</li>
+					</ul>
+					<br />
+					The agent's possible actions are four discrete: do nothing (0), fire the left orientation engine (1),
+					fire the main engine (2), and fire the right orientation engine (3):
+					$$A = \{ 0, 1, 2, 3 \}$$
+					The goal is for the agent to safely land the vehicle on the surface. Although the
+					landing pad is at coordinates (0,0), landing outside of the landing pad is possible.
+					In addition, the lander's fuel is infinite.<br />
+					Each episode's reward is calculated as such:
+					<ul>
+						<li>If the lander moves away from the landing pad, it loses reward.</li>
+						<li>If the lander crashes, it receives an additional -100 points.</li>
+						<li>If it comes to rest, it receives an additional +100 points.</li>
+						<li>Each leg with ground contact is +10 points.</li>
+						<li>Firing the main engine is -0.3 points each frame.</li>
+						<li>Firing the side engine is -0.03 points each frame.</li>
+					</ul>
+					According to OpenAI, the environment is considered solved at 200+ points. In this project, the
+					reward calculation is edited in order to guide the solution.<br/>
+					As a starting state, the lander is spawned at the top center of the viewport
+					with a random initial force applied to its center of mass.<br/>
+					The episode is terminated if:
+					<ul>
+						<li>The lander crashes (the lander's body gets in contact with the surface).</li>
+						<li>The lander gets outside of the viewport (x coordinate is greater than 1).</li>
+						<li>The lander is not awake. According to <a href="https://box2d.org/documentation/md__d_1__git_hub_box2d_docs_dynamics.html#autotoc_md61">
+							Box2D Documentation</a>,
+							a body which is not awake is a body which does not move and does not collide with any
+							other body.</li>
+					</ul>
+				</p>
+
+				<h3>The Q-Value Approximation Model</h3>
+				<p>In order to implement a learning algorithm that will train the agent, a function that maps the state
+					and the action to the expected return (the Q-Value) is required. In this project, a Neural Network with three
+					hidden layers is used as the Q-Value Approximator. The input layer is the vector of state values.
+					The output layer is a 4-valued vector that includes the Q Value for each action. A schematic of the model's
+					architecture can be seen in Fig. 1. The neural network object created for regression in <a href="/projects/ANN.html">Neural Network Model in Python</a>
+					is implemented.
+					<br />
+					<figure>
+					<img src="/images/lunarLander/qNN.png" style="height:20em"/>
+						<figcaption>Fig. 1 - A schematic of the Neural Network's architecture.</figcaption>
+					</figure>
+					<br />
+				</p>
+
+				<h3>The Learning Algorithm - Q-Learning</h3>
+				<p>
+					The Q-Learning algorithm is implemented for the agent's learning. Q-Learning implements the following
+					Q-Value update, implemented using Stochastic Gradient Descent:
+					<div class="container" style="height: 5em; width: 100%;">
+					$$ Q(s,a) \leftarrow Q(s,a) + \alpha (r + \gamma \ \text{max}_{a_2} Q(s_2, a_2) - Q(s,a)) $$
+					</div>
+					The agent chooses the next action using the Epsilon-Greedy policy of the argmax of the Q-Values of the
+					state, over the four possible actions. The Epsilon-Greedy policy helps the agent explore new combinations
+					of states and actions. To implement the Q-Learning algorithm for the neural network's backpropagation
+					stage, a "target" vector is created. In fact, the "target" vector is composed of the neural network's
+					Q-Values predictions for the current state s. The only difference is that the Q-Value of the action taken
+					is replaced by the target value G:
+					$$ G = r + \gamma \ \text{max}_{a_2} Q(s_2, a_2) $$
+					To calculate \( \text{max}_{a_2} Q(s_2, a_2) \), the neural network makes a prediction for the
+					Q-Values of the next state (\( s_2 \)). For example, if action 1 is chosen, the "target" vector is:
+					$$ \vec{\text{target}} = \begin{bmatrix}
+					\hat{Q(s,0)} \\
+					G \\
+					\hat{Q(s,2)} \\
+					\hat{Q(s,3)} \\
+					\end{bmatrix} $$
+					At each training episode, the environment is reset. Then, at each agent's step, the neural network
+					predicts the Q-Values of the actions for the current state. The argmax of the predictions over the
+					actions is used
+					in the Epsilon-Greedy method to choose the next action. The agent takes a step in the environment using
+					the selected action. By obtaining the step's reward, the return is calculated and the algorithm takes
+					a gradient step to update the corresponding model's parameters (weights and bias). As the "target" vector
+					differs from the output vector in only one element, only the parameters that affected this specific
+					output node will be adapted in the backpropagation stage. This procedure is
+					repeated for the number of training episodes. To assist the models' convergence, the RMSProp optimizer
+					is implemented with Momentum.
+				</p>
+
+				<h3>The Memory Feature</h3>
+				<p>
+					The learning procedure described above, implements Stochastic Gradient Descent with only one sample. 
+					While this approach might work well in different scenarios, its application to neural networks
+					would render the convergence of the model very difficult.
+					For this reason, a "memory" feature is added to the agent. The agent's "memory" is a simple list with an arbitrary
+					maximum capacity, which includes past states, actions, rewards, etc. In fact, the "memory"
+					list consists of the tuple: \( (s, r, a, s2, done) \) of each step. In this sense, at each step, the
+					aforementioned tuple is appended to the list. If the list reaches the maximum capacity, the first (oldest)
+					tuple is removed. Then, in the learning stage, a mini-batch of the agent's memory is used for the
+					neural network's backpropagation. This is done using the "replay" feature. The agent's memory is
+					instanced using the "deque" object included in the "collections" python module.
+				</p>
+
+				<h3>The Replay Feature</h3>
+				<p>
+					The agent's "replay" feature is simply the agent's ability to "learn", by adjusting its neural network's
+					parameters. Thus, the "replay" feature includes the following steps:
+					<ul>
+						<li>Take a mini-batch from the memory.</li>
+						<li>Predict the Q-Values for the states in the mini-batch.</li>
+						<li>Predict the Q-Values for the next states in the mini-batch.</li>
+						<li>Calculate the returns for the states.</li>
+						<li>Create the "target" vectors.</li>
+						<li>Take a single gradient step using the "target" vectors as the target output.</li>
+					</ul> 
+				</p>
+
+				<h3>The Reward Function</h3>
+				<p>
+					In this project, the reward calculation is adjusted in order to achieve the desired result and
+					assist the agent during the training session. At each step, the default reward is augmented
+					with a function of the horizontal and the vertical distance from the landing pad:
+					$$ r' = r - \left( \frac{|x|y}{0.5} \frac{y}{0.4} + 1 \right)  $$
+					To elaborate:
+					<ul>
+						<li>\( |x|y \) : The reward is reduced by the vehicle's horizontal distance from the landing pad,
+							multiplied by the vehicle's height. This component will motivate the agent to adjust the vehicle's
+							horizontal distance earlier rather than latter.</li>
+						<li>\( y \) : The reward is reduced by the vehicle's height. This component will motivate the
+							agent to reduce its height faster.</li>
+						<li>\( 1 \) : The reward is reduced at each step by 1. This will motivate the agent to land
+							the vehicle as fast as possible.</li>
+					</ul>
+					The function's coefficients are adjusted by experimenting with different values.
+				</p>
+
+				<h3>Hyperparameter Selection</h3>
+				<p>
+					As in most machine learning problems, the hyperparameters' tuning problem is posed. For this case too,
+					the algorithm's designer may approach the solution by experimenting with different hyperparameter values.
+					The settings used in this case are briefly presented below:
+					<ul>
+						<li>Maximum Steps per Episode: Set to 600. This value should not be too small, as the agent has to
+							be able to experiment with different actions. If each episode ends too fast, the
+							agent will have a hard time reaching the goal.</li>
+						<li>Number of Training Episodes: Set to 200. The training episodes have to be enough to let
+							the agent train. Values higher than needed will lead to uneccessary long training sessions.</li>
+						<li>Discount Factor - \( \gamma \): Set to 0.999. For this case, the discount factor is
+							set close to 1, as the agent should be trained to place emphasis on long-term rewards.</li>
+						<li>Epsilon-Greedy Value - \( \epsilon \): Set to \( \text{max}(0.02, 0.1 \cdot 0.995^{t}) \). The epsilon-greedy
+							value is set to be initialized with 0.1 and exponentially decay with each learning episode \( t \),
+							with a minimum of 0.02, as the exploration element should be more present in earlier learning
+							stages than latter.</li>
+						<li>Memory Capacity: Set to 3000.</li>
+						<li>Neural Network's Architecture: A Neural Network with three hidden layers is implemented.
+							The neurons per layer are: 256, 128, 128.</li>
+						<li>Neural Network's Activation Function: For the hidden layers, the ReLU function is used, while
+							for the output layer, a simple linear output is implemented.</li>
+						<li>Neural Network's Weights Regularization: In this model, no regularization is considered.</li>
+						<li>Mini-Batch Size: Set to 256. This means that during the replay session, the agent takes 256
+							random samples to use for the neural network's training.</li>
+						<li>Learning Rate - \( \alpha \): Set to \( 10^{-4} \). Small learning rates will lead to longer training
+							sessions, as Stochastic Gradient Descent is used. Large learning rates will lead to overshooting
+							and missing the minimum. In this case, the Momentum RMSProp assists the gradient step.
+						<li>Momentum - \( \mu \): Set to 0.9.</li>
+						<li>Decay Factor - d: Set to 0.99.</li>
+					</ul>
+				</p>
+				
+			<br />
+			<hr>
+			<br />
+
+
+			<h2>Python Implementation in Jupyter Notebook</h2>
+				<div class="container" style="height: 100vh; width: 100%;">
+					<iframe src="/images/lunarLander/LunarLander_ANN_QLearning.html"
+					style="height: 100%; width: 300%;"></iframe>
+				</div>
+
+			<br />
+			<hr>
+			<br />
+
+
+			<h2>Results</h2>
+				<p>The trained agent is tested in a new environment (See cell [10] above). During the testing
+					episode, the agent chooses the next action greedily, using the argmax of the estimated Q Values. The
+					Epsilon-Greedy policy is not needed in the testing episode as there is no need for exploration - the
+					agent's models will not be updated.
+					The agent successfully lands the vehicle inside the landing pad and obtains a reward of \( \approx 285 \).
+					The result is displayed in the animation below. The animation is created by saving the frame of each step in
+					cell [10]. The frames are then saved into a gif file using the Pillow library in cell [11].
+				</p>
+				<figure>
+					<img src="/images/lunarLander/LunarLanderTesting.gif"/>
+					<figcaption>Fig. 2 - The agent successfully lands the vehicle in the landing pad.</figcaption>
+				</figure>
+				<br />
+				<p>As the reward-per-episode plot is choppy due to the stochasticity of the agent's spawn
+					and the epsilon-greedy policy, the running average reward plot is prefered. In addition, the goal is to train
+					the agent to have a better "average" performance, meaning that in some episodes, the agent may perform
+					better than others. Thus, the running average reward plot contains more useful information
+					than the reward-per-episode plot. As it is shown, the average reward of the agent increases during
+					the earlier episodes of training, and converges to a maximum point.
+				</p>
+				<figure>
+					<img src="/images/lunarLander/running_avg_reward.png"/>
+					<figcaption>Fig. 3 - The running average reward over the training episodes.</figcaption>
+				</figure>
+				<br />
+
+				<p>To further monitor the trained agent's performance, the agent is testing in a total
+					of 20 testing episodes and the average reward acquired is calculated. This is done in cells [12] and
+					[13]. The agent's average reward is \( \approx 224 \), which is above the OpenAI's Gym threshold
+					of 200, and thus the environment is considered solved.
+				</p>
+				
+
+				<h3>Final Thoughts</h3>
+				<p>
+					The methodology used in this mini-project successfully solves the Lunar Lander environment offered by OpenAI's
+					Gym library. It was confirmed that a neural network -when tuned accordingly- can be powerful enough
+					to approximate non-linear functions such as the Q-Value function for this case. The effectiveness of
+					classic Reinforcement Learning algorithms such as Q-Learning is also displayed.
+				</p>
+
+			<br />
+			<hr>
+			<br />
+
+			<h2>References</h2>
+
+					<p>Watkins, C.J., Dayan, P. (1992) Technical Note: Q-Learning. Machine Learning 8, 279–292.
+					<p>Aggarwal, C. C. (2019). Neural Networks and Deep Learning: A Textbook (1st ed.). Springer Cham.</p>
+					<p>Tokic, Michel. (2010). Adaptive ε-Greedy Exploration in Reinforcement Learning Based on Value Differences. 203-210. 10.1007/978-3-642-16111-7_23. </p>
+					<p>Sutton, R. S., & Barto, A. G. (1998). Reinforcement Learning: An Introduction (1st ed.). MIT Press.</p>
+					<p>Ruder, S. (2016). An overview of gradient descent optimization algorithms. arXiv preprint arXiv:1609.04747.</p>
+
+			<br />
+			<hr>
+			<br />
+			<a href="/projects.html" class="button">Back to Projects</a>
+			<br />
+			<br />
+
+	</div>
+
+	</body>
+</html>
