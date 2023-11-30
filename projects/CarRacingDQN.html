@@ -248,7 +248,9 @@
                     </ul>
                     As per usual, Q-Learning is applied as the learning process and thus, the update rule is
                     the following:
-                    $$ w_{t+1} = w_t + \alpha \nabla _w (r + \gamma \text{max}_{a_2}Q(s_2, a_2) - \hat{Q}(s,a))$$
+                    <div class="container" style="height: 5em; width: 100%;">
+						$$ w_{t+1} = w_t + \alpha \nabla _w (r + \gamma \text{max}_{a_2}Q(s_2, a_2) - \hat{Q}(s,a))$$
+					</div>
                     Thus, the loss function is the following:
                     $$ J = r + \gamma \text{max}_{a_2}Q(s_2, a_2) - \hat{Q}(s,a) $$
                     The selected optimizer is the RMSProp with a learning rate of \( 10^{-4} \).<br />
@@ -346,7 +348,7 @@
                 </figure>
 
                 <figure>
-                    <video width="600" height="400" controls>
+                    <video controls style="max-width: 100%;">
                         <source src="/images/carRacingDQN/CarRacing.webm" type="video/webm">
                     </video>
                     <figcaption>Fig. 6 - The trained agent is able to drive fast in the track but still
