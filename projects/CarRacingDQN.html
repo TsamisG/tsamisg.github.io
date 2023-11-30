@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Racing - Autonomous Driving with DQN</title>
+	<meta property="og:image" content="https://avatars.githubusercontent.com/u/9919?s=200&v=4">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400&display=swap">
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'>  
+	<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+</head>
+<body>
+    <div id="container">
+        <div id="sidebar">
+
+            <div id="sidebar-content">
+                <ul style="list-style-type: none;">
+                    <li><a href="/index.html">Home</a></li>
+                    <li><a href="/projects.html">Projects</a></li>
+                    <li><a href="/info.html">About Me</a></li>
+                    <li><a href="/contact.html">Contact</a></li>
+                </ul>
+            </div>
+
+            <div id="sidebar-contact-icons">
+                <a href="https://www.linkedin.com/in/georgios-tsamis-799992212/">
+                    <i class='fa fa-linkedin-square' style="font-size:2em; margin-right:1em;"></i>
+                </a>
+
+                <a href="https://github.com/TsamisG">
+                    <i class='fa fa-github' style="font-size:2em; margin-right:1em;"></i>
+                </a>
+
+                <a href="mailto:tsamis.g@outlook.com">
+                    <i class='fa fa-envelope-square' style="font-size:2em;"></i>
+                </a>
+
+                
+            </div>
+            
+        </div>
+
+		<div id="content">
+			<h1>Car Racing - Autonomous Driving with DQN</h1>
+				<p>In this project, the OpenAI's Car Racing Gym environment is solved using an agent that
+					bears Deep Q-Networks and learns through memory replay.<br />
+					In this environment, the agent is tasked with controlling a car that races in a simple track.
+					The state of the environment is the rendered image at each step. The generated track is random
+					at each episode. This environment offers both a continuous and a discrete action space version.
+					Of course, the discrete version is used, as the DQN methodology can only tackle discrete action
+					spaces.<br />
+					See more: <a href="https://www.gymlibrary.dev/environments/box2d/car_racing/">Car Racing - Gym Documentation</a>
+				</p>
+
+			<br />
+			<hr>
+			<br />
+            
+			<h2>Project Overview</h2>
+                <p>
+                    The aim of this project is to train an agent to be able drive the car in the generated track successfully.
+                    To achieve this, a Convolutional Neural Network is used that uses the frame of the game (which is actually
+                    the state) as an input to predict the Q-Values of each action. Networks such as the aforementioned
+                    one are usually called Deep Q-Networks in the bibliography - or DQN for short. The DQN basically predicts
+                    the expected values for the Returns of each action at a given state. The agent chooses the action for the
+                    given state with the maximum Q-Value, as this action is expected to lead to a more desirable outcome.
+                    Then, by implementing the Q-Learning method, the DQN is updated at each step.<br />
+
+                    However, in DQN applications, using the DQN for both evaluating the state and the actions and for
+                    calculating the target values makes the estimator's convergence difficult. For this reason, two Deep
+                    Q-Networks are used: one for evaluating \( Q(s,a) \) (the Evaluation Network) and one for calculating
+                    the target values and specifically \( \text{max}_{a_2} Q(s_2, a_2) \) (the Target Network). The Evaluation
+                    Network is updated using gradient ascent at each agent's step, while the Target Network copies the
+                    Evaluation Network's parameters every N steps. This technique makes the agent's learning much more stable.
+                    <br />
+
+                    Another feature that is needed in this project and is usually implemented in DQN applications, is the
+                    Memory-Replay feature. In a nutshell, the agent keeps track of past states, actions, rewards, next states
+                    and termination flags in its memory. At each step, the agent samples a batch from its memory to use
+                    for the Q-Value Estimator's (the DQN's) training. This feature makes the learning procedure stable
+                    and the agent's performance more robust.<br />
+
+                    All of the developed python scripts for this project can be found in my Github repository:
+                    <a href="https://github.com/TsamisG/CarRacingDQN">CarRacingDQN</a>
+                </p>
+
+                <br />
+                <hr>
+                <br />
+
+                <h2>The Car Racing Environment</h2>
+                <p>
+                    In the Car Racing environment, the agent is tasked with driving a car in a racing track.
+                    The state of the environment is simply the image frame of the game at that time step. In the
+                    discrete version of the game (which is used in this project), the agent has five different
+                    actions: do nothing (0), steer left (1), steer right (2), apply throttle (3), apply the brakes (4).
+                    Hence the state space includes a 96x96x3 image frame and thus is a 3-dimensional matrix which
+                    elements are bounded in \( [0, 255] \) as each element is a color pixel. The action space
+                    contains the five possible discrete actions:
+                    $$ A = \{0, 1, 2, 3, 4\} $$
+                    The reward is -0.1 at each time step and +1000/N for every track tile visited, where N is the
+                    total number of tiles viseted in the track. This reward scheme designed by the environment's
+                    creators motivates the agent to drive fast towards the episode's ending, which is finishing the
+                    track.
+                </p>
+
+
+                <br />
+                <hr>
+                <br />
+
+                <h2>Project Outline</h2>
+                <p>
+                    This project is broken down in the following sections:
+                    <ul>
+                        <li>Frame Preprocessing</li>
+                        <li>The Memory Feature</li>
+                        <li>The Q-Value Approxmator - Deep Q-Network</li>
+                        <li>The Agent</li>
+                        <li>The Training Process</li>
+                        <li>Testing the Agent</li>
+                    </ul>
+                </p>
+
+                <br />
+                <hr>
+                <br />
+
+                <h2>Frame Preprocessing</h2>
+                <p>
+                    The OpenAI's Car Racing gym environment uses the game's frame as the environment's state by default.
+                    Each frame has a resolution of 96x96 pixels and has three colors channels. The main idea is to use
+                    a convolutional neural network as a DQN, that uses the current frame as input to predict the
+                    Q-Values of the actions. However, a preprocessing is needed to make the DQN's training easier.<br />
+
+                    First of all, when the Car Racing environment is initialized, the camera's
+                    perspective zooms from above into the car's location. This
+                    part has to be skipped by the agent, as it will probably confuse the DQN during the training
+                    process. To be exact, the first 35 frames of each episode are truncated.
+                    In addition, the three color channels are not needed - each frame is converted to a
+                    single channel grayscale image. Finally, to implement information about the car's movement in
+                    the DQN's input, four consequtive frames are stacked together; during which the agent
+                    repeats the same action. In this way, the DQN is given information about the car's movement.
+                    In order to implement the aforementioned preprocessing steps, the gym.Wrapper and the gym.ObservationWrapper
+                    objects are used.<br />
+                    <br />
+                    The first preprocessing step includes the Step and the Reset methods. Of course,
+                    the Step_Reset object inherits the characteristics of the gym.Wrapper object and thus
+                    the super-constructor is called in the initialization method. In the step method, the
+                    action repetition is implemented, while in the reset method the first 35 frames of the environment
+                    are skipped by forcing the zero action for each of the 35 steps.
+                </p>
+
+                <figure>
+                    <div class="image-container" style="width:45%;display: inline-block; margin-right: 4%;" >
+                        <img src="/images/carRacingDQN/reset_frame.jpg">
+                    </div>
+                
+                    <div class="image-container" style="width:45%;display: inline-block; margin-left: 4%;">
+                        <img src="/images/carRacingDQN/state_frame.jpg">
+                    </div>
+                    <figcaption>Fig. 1 - The first frame by default in each episode and the first frame after the
+                        first preprocessing step.
+                    </figcaption>
+                </figure>
+
+
+                <p>
+                    The second preprocessing step includes the frame's cropping and the grayscale transformation.
+                    In fact, the last 12 pixels of the height dimension are cropped as they contain
+                    information about the reward and the car's performance (throttle, brake etc.).
+                    To make the frame square, 6 pixels
+                    are also truncated from each side of the width dimension. Then, the frame is transformed into a
+                    single-channel, grayscale one using the OpenCV's cvtColor method with the COLOR_RGB2GRAY arguement.
+                    The frame array is also divided by 255, which is the maximum value of each pixel. This step
+                    actually performs the min-max normalization to the frame, which is proven to help a CNN's training.
+                </p>
+
+                <figure>
+                    <img src="/images/carRacingDQN/state_frame_cropped.jpg">
+                    <figcaption>Fig. 2 - The first frame after the second preprocessing step.</figcaption>
+                </figure>
+
+                <p>
+                    The third and final preprocessing step includes the frame stacking. This step
+                    is important because stacking up a few consecutive frames adds perspective
+                    about the car's movement. This feature is created
+                    by using a deque list, offered by the collections package. The reset method is adjusted to
+                    clear the frame stack. Then, for the first step, the first frame is repeated to initialize the
+                    episode. In the observation method, the new state is appended in the deque, which in turn
+                    drops the oldest state frame from the list. In this way, at each step, the frame stack
+                    always includes four frames to be used as input by the DQN.
+                </p>
+
+                <figure>
+                    <img src="/images/carRacingDQN/frame_stack.jpg" style="height: 20em">
+                    <figcaption>Fig. 3 - Four consecutive frames are stacked in the third preprocessing step.</figcaption>
+                </figure>
+
+                <p>
+                    The preprocessing steps are applied one by one by the make_env method. The corresponding objects and
+                    the make_env method can be found in the
+                    <a href="https://github.com/TsamisG/CarRacingDQN/blob/main/DQN_Utils.py">DQN_Utils</a> file.
+                </p>
+
+
+                <br />
+                <hr>
+                <br />
+
+                <h2>The Memory Feature</h2>
+                <p>
+                    Adding a memory element in the agent is crucial for this type of applications, as it
+                    allows the agent to store and replay past experiences. Instead of learning from consecutive
+                    experiences, DQN randomly samples from its memory to break correlations between
+                    consecutive experiences. This helps in stabilizing and improving the training process.<br />
+
+                    In this project, the agent's memory is modelled as an object with five arrays; one corresponding
+                    to each of the following: current state, action taken, reward acquired, next state, termination
+                    flag. As each state consists of 4 consecutive image frames, the state arrays can be pretty
+                    computationally heavy. Thus, the agent's memory cannot exceed the constraints that the
+                    system's RAM imposes.<br />
+                    The Memory object can be found in the
+                    <a href="https://github.com/TsamisG/CarRacingDQN/blob/main/DQN_Utils.py">DQN_Utils</a> file.
+                </p>
+
+                <br />
+                <hr>
+                <br />
+
+                <h2>The Q-Value Approxmator - Deep Q-Network</h2>
+                <p>
+                    In DQN applications, the Q-Value Approximator is a deep neural networks that maps the current state
+                    to the Q-Values corresponding to each discrete action. In this case, the Q-Value Approximator
+                    is a Convolutional Neural Network that maps the state (the four consecutive frames) to the
+                    corresponding Q-Values. Hence, a Deep Q-Network object is created using the PyTorch library.<br />
+                    The DQN's selected architecture is presented below:
+                    <ul>
+                        <li>Layer 1: Convolutional Layer with 16 filters, kernel size of 8, stride of 4,
+                            activated through the ReLU function.</li>
+                        <li>Layer 2: Convolutional Layer with 32 filters, kernel size of 4, stride of 2,
+                            activated through the ReLU function.</li>
+                        <li>Layer 3: Dense Layer with 256 neurons, activated through the ReLU function.</li>
+                        <li>Layer 3: Dense Layer with 5 neurons (one for each action),
+                            activated through the linear function.</li>
+                    </ul>
+                    As per usual, Q-Learning is applied as the learning process and thus, the update rule is
+                    the following:
+                    $$ w_{t+1} = w_t + \alpha \nabla _w (r + \gamma \text{max}_{a_2}Q(s_2, a_2) - \hat{Q}(s,a))$$
+                    Thus, the loss function is the following:
+                    $$ J = r + \gamma \text{max}_{a_2}Q(s_2, a_2) - \hat{Q}(s,a) $$
+                    The selected optimizer is the RMSProp with a learning rate of \( 10^{-4} \).<br />
+                    As mentioned in the overview, two DQNs are used; one for evaluating \( Q(s,a) \) and one
+                    for calculating the target values \( \text{max}_{a_2}Q(s_2, a_2)\). The Evaluation Network
+                    gets updated at each agent's step, while the Target Network refreshes its parameters by copying
+                    the Evaluation Network's every N steps. This technique makes the agent's learning much more stable.<br />
+                    The DQN object can be found in the
+                    <a href="https://github.com/TsamisG/CarRacingDQN/blob/main/DQN_Utils.py">DQN_Utils</a> file.
+                </p>
+
+                <br />
+                <hr>
+                <br />
+
+                <h2>The Agent</h2>
+                <p>
+                    The agent for this project is created as an object and is given the following characteristics:
+                    <ul>
+                        <li>Memory with a buffer of 20'000 steps.</li>
+                        <li>One Evaluation and one Target DQN.</li>
+                        <li>Action Selection through Epsilon-Greedy with Linearly Decaying Epsilon</li>
+                        <li>Discount Factor: \( \gamma = 0.99 \)</li>
+                        <li>Batch size for each gradient step: 32</li>
+                    </ul>
+                    The Agent object can be found in the
+                    <a href="https://github.com/TsamisG/CarRacingDQN/blob/main/DQN_Utils.py">DQN_Utils</a> file.
+                </p>
+
+                <br />
+                <hr>
+                <br />
+
+                <h2>The Training Process</h2>
+                <p>
+                    The training process is initialized by instantiating the environment and the agent. The training
+                    for such applications can take up to several days. For this matter, the DQNs and the agent's
+                    memory are saved in external files every 50 episodes. The training was initially planned to
+                    stop after 2 million steps. However, the training was manually stopped after the agent achieved
+                    a satisfactory performance (at around 1 million steps).
+                    To accelerate the learning process, some features where added in the
+                    training loop:
+                    <ul>
+                        <li>Maximum steps per episode: 1000.</li>
+                        <li>The episode stops if the episode's total reward is less than -10.</li>
+                        <li>The episode stops after the agent has received a negative reward for 300 consecutive steps.</li>
+                    </ul>
+                    The training's metrics are appended in an external file. This feature combined with the often DQN
+                    and Memory checkpoints makes the training pause possible. The training can be stopped at any time
+                    and can be continued from the final checkpoint. Hence, the trained agent presented in this project
+                    can be trained further. In Figure 4, the learning convergence is displayed. As it can be seen,
+                    the epsilon is linearly decayed, starting from 1, with a minimum of 0.1. The learning convergence
+                    is clear as the agent improves over the steps. The red line corresponds to the average reward of the
+                    last 50 episodes, while the blue line corresponds to the highest reward acquired so far.<br />
+                    <br />
+                    The corresponding jupyter notebook used for the agent's training can be found in my Github
+                    repository: <a href="https://github.com/TsamisG/CarRacingDQN/blob/main/CarRacing_DQN.ipynb">
+                        CarRacing_DQN.ipynb</a>.<br/>
+                    <u>Note:</u> The learning plot is created using the testing notebook presented in the following
+                    section.
+                </p>
+                <figure>
+                    <img src="/images/carRacingDQN/learning-plot.jpg" style="max-height: 30em;">
+                    <figcaption>Fig. 4 - The learning convergence. On the right axis, the epsilon value
+                        is displayed. On the left axis, the 50-Episode average reward and the best-so-far reward
+                        are displayed.
+                    </figcaption>
+                </figure>
+
+                <br />
+                <hr>
+                <br />
+
+                <h2>Testing the Agent</h2>
+                <p>
+                    In this section, the agent's performance is displayed. In the animation in Figure 5, the agent
+                    can be seen after a few training steps. It still makes choices randomly and does not
+                    drive fast, but it is clear that it understands that it acquires higher rewards by moving forward
+                    in the track. In Figure 6, the trained agent can be seen in a full testing episode. The episode
+                    starts and the agent immediately starts by applying the trottle and driving as fast as possible.
+                    The agent can handle most of the corners with high speed. The agent's actions are near-perfect, until
+                    0:13 where it loses control due to the slipping. However, it is really impressive that
+                    it turns back to the road after only a few steps. It goes back to driving with high speed until the same
+                    thing occurs at around 0:33 and again in a later time. In 0:58 the car drifts out of the track again,
+                    and the agent returns to it, this time entering it in the opposite direction. It seems that the
+                    return-to-track policy it has developed is not correlated to the direction it should enter the road.<br />
+                    The jupyter notebook used for the agent's testing can be found in my Github repository:
+                    <a href="https://github.com/TsamisG/CarRacingDQN/blob/main/CarRacing_DQN_Testing.ipynb">
+                        CarRacing_DQN_Testing.ipynb</a>
+                </p>
+
+                <figure>
+                    <img src="/images/carRacingDQN/CarRacing_untrained.gif"/>
+                    <figcaption>Fig. 5 - The untrained agent takes actions randomly.</figcaption>
+                </figure>
+
+                <figure>
+                    <video width="600" height="400" controls>
+                        <source src="/images/carRacingDQN/CarRacing.webm" type="video/webm">
+                    </video>
+                    <figcaption>Fig. 6 - The trained agent is able to drive fast in the track but still
+                        makes mistakes.</figcaption>
+                </figure>
+                
+            <br />
+            <hr>
+            <br />
+
+            <h2>Conclusions</h2>
+            <p>
+                In this project, the DQN methodology is implemented to solve the OpenAI's CarRacing Gym environment.
+                The agent is enhanced with two Deep Q-Networks - the Evaluation Networks and the Target Network, in
+                addition to having a memory buffer. At each training step, the agent samples a batch from its memory
+                and updates the Evluation Network's parameters. The Target Network is updated by copying
+                the Evaluation Network's parameters every N steps. This project is a good indication of how
+                powerful Reinforcement Learning can be if used correctly with the suitable tools.
+            </p>
+
+			<br />
+			<hr>
+			<br />
+
+			<h2>References</h2>
+                <p>Mnih, V., Kavukcuoglu, K., Silver, D., Graves, A., Antonoglou, I., Wierstra, D., & Riedmiller, M. A. (2013). Playing Atari with Deep Reinforcement Learning. CoRR, abs/1312.5602.</p>
+                <p>Watkins, C.J., Dayan, P. (1992) Technical Note: Q-Learning. Machine Learning 8, 279–292.
+                <p>Aggarwal, C. C. (2019). Neural Networks and Deep Learning: A Textbook (1st ed.). Springer Cham.</p>
+                <p>Tokic, Michel. (2010). Adaptive ε-Greedy Exploration in Reinforcement Learning Based on Value Differences. 203-210. 10.1007/978-3-642-16111-7_23. </p>
+                <p>Sutton, R. S., & Barto, A. G. (1998). Reinforcement Learning: An Introduction (1st ed.). MIT Press.</p>
+                <p>Ruder, S. (2016). An overview of gradient descent optimization algorithms. arXiv preprint arXiv:1609.04747.</p>
+
+
+            <br />
+            <hr>
+            <br />
+            <a href="/projects.html" class="button">Back to Projects</a>
+            <br />
+            <br />
+	
+	</div>
+
+	</body>
+</html>

@@ -302,7 +302,7 @@
 						<p>
 							In a similar fashion, the "partial_fit" methods for the RMSProp and the Adam optimizers are implemented.
 							For the RMSProp, the parameters update rule is as follows:
-							<div class="container" style="height: 5em; width: 100%;">
+							<div class="container" style="height: auto; width: 100%;">
 							$$ \text{cache}_W = \text{decay} \cdot \text{cache}_W + (1 - \text{decay}) \cdot \left( \nabla _W \right)^2 $$
 							$$ \text{cache}_b = \text{decay} \cdot \text{cache}_b + (1 - \text{decay}) \cdot \left( \nabla _b \right)^2 $$
 							</div>
@@ -403,8 +403,8 @@
 	
 	<span style="color: #008800; font-weight: bold">for</span> ep <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #0000DD; font-weight: bold">1</span>, <span style="color: #007020">self</span><span style="color: #333333">.</span>epochs<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>):
 		<span style="color: #008800; font-weight: bold">for</span> j <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(n_batches):
-			Xbatch <span style="color: #333333">=</span> X[j<span style="color: #333333">*</span>n_batches:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>n_batches,:]
-			Ybatch <span style="color: #333333">=</span> Y[j<span style="color: #333333">*</span>n_batches:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>n_batches,:]
+			Xbatch <span style="color: #333333">=</span> X[j<span style="color: #333333">*</span>self.batch_size:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>self.batch_size,:]
+			Ybatch <span style="color: #333333">=</span> Y[j<span style="color: #333333">*</span>self.batch_size:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>self.batch_size,:]
 			
 			pYbatch, Z <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(Xbatch)
 
@@ -450,8 +450,8 @@
 	
 	<span style="color: #008800; font-weight: bold">for</span> ep <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #0000DD; font-weight: bold">1</span>, <span style="color: #007020">self</span><span style="color: #333333">.</span>epochs<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>):
 		<span style="color: #008800; font-weight: bold">for</span> j <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(n_batches):
-			Xbatch <span style="color: #333333">=</span> X[j<span style="color: #333333">*</span>n_batches:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>n_batches,:]
-			Ybatch <span style="color: #333333">=</span> Y[j<span style="color: #333333">*</span>n_batches:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>n_batches,:]
+			Xbatch <span style="color: #333333">=</span> X[j<span style="color: #333333">*</span>self.batch_size:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>self.batch_size,:]
+			Ybatch <span style="color: #333333">=</span> Y[j<span style="color: #333333">*</span>self.batch_size:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>self.batch_size,:]
 			
 			pYbatch, Z <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(Xbatch)
 
@@ -501,8 +501,8 @@
 	eps <span style="color: #333333">=</span> <span style="color: #6600EE; font-weight: bold">1e-08</span>
 	<span style="color: #008800; font-weight: bold">for</span> ep <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #0000DD; font-weight: bold">1</span>, <span style="color: #007020">self</span><span style="color: #333333">.</span>epochs<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>):
 		<span style="color: #008800; font-weight: bold">for</span> j <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(n_batches):
-			Xbatch <span style="color: #333333">=</span> X[j<span style="color: #333333">*</span>n_batches:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>n_batches,:]
-			Ybatch <span style="color: #333333">=</span> Y[j<span style="color: #333333">*</span>n_batches:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>n_batches,:]
+			Xbatch <span style="color: #333333">=</span> X[j<span style="color: #333333">*</span>self.batch_size:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>self.batch_size,:]
+			Ybatch <span style="color: #333333">=</span> Y[j<span style="color: #333333">*</span>self.batch_size:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>self.batch_size,:]
 			<span style="color: #007020">self</span><span style="color: #333333">.</span>t <span style="color: #333333">+=</span> <span style="color: #0000DD; font-weight: bold">1</span>
 			pYbatch, Z <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(Xbatch)
 
@@ -688,8 +688,8 @@
 	
 	<span style="color: #008800; font-weight: bold">for</span> ep <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #0000DD; font-weight: bold">1</span>, <span style="color: #007020">self</span><span style="color: #333333">.</span>epochs<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>):
 		<span style="color: #008800; font-weight: bold">for</span> j <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(n_batches):
-			Xbatch <span style="color: #333333">=</span> X[j<span style="color: #333333">*</span>n_batches:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>n_batches,:]
-			Ybatch <span style="color: #333333">=</span> Y[j<span style="color: #333333">*</span>n_batches:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>n_batches,:]
+			Xbatch <span style="color: #333333">=</span> X[j<span style="color: #333333">*</span>self.batch_size:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>self.batch_size,:]
+			Ybatch <span style="color: #333333">=</span> Y[j<span style="color: #333333">*</span>self.batch_size:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>self.batch_size,:]
 			
 			Yhat_batch, Z <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(Xbatch)
 
@@ -734,8 +734,8 @@
 	
 	<span style="color: #008800; font-weight: bold">for</span> ep <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #0000DD; font-weight: bold">1</span>, <span style="color: #007020">self</span><span style="color: #333333">.</span>epochs<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>):
 		<span style="color: #008800; font-weight: bold">for</span> j <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(n_batches):
-			Xbatch <span style="color: #333333">=</span> X[j<span style="color: #333333">*</span>n_batches:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>n_batches,:]
-			Ybatch <span style="color: #333333">=</span> Y[j<span style="color: #333333">*</span>n_batches:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>n_batches,:]
+			Xbatch <span style="color: #333333">=</span> X[j<span style="color: #333333">*</span>self.batch_size:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>self.batch_size,:]
+			Ybatch <span style="color: #333333">=</span> Y[j<span style="color: #333333">*</span>self.batch_size:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>self.batch_size,:]
 			
 			Yhat_batch, Z <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(Xbatch)
 
@@ -785,8 +785,8 @@
 	eps <span style="color: #333333">=</span> <span style="color: #6600EE; font-weight: bold">1e-08</span>
 	<span style="color: #008800; font-weight: bold">for</span> ep <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #0000DD; font-weight: bold">1</span>, <span style="color: #007020">self</span><span style="color: #333333">.</span>epochs<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>):
 		<span style="color: #008800; font-weight: bold">for</span> j <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(n_batches):
-			Xbatch <span style="color: #333333">=</span> X[j<span style="color: #333333">*</span>n_batches:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>n_batches,:]
-			Ybatch <span style="color: #333333">=</span> Y[j<span style="color: #333333">*</span>n_batches:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>n_batches,:]
+			Xbatch <span style="color: #333333">=</span> X[j<span style="color: #333333">*</span>self.batch_size:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>self.batch_size,:]
+			Ybatch <span style="color: #333333">=</span> Y[j<span style="color: #333333">*</span>self.batch_size:(j<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>self.batch_size,:]
 			<span style="color: #007020">self</span><span style="color: #333333">.</span>t <span style="color: #333333">+=</span> <span style="color: #0000DD; font-weight: bold">1</span>
 			Yhat_batch, Z <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(Xbatch)
 
@@ -909,7 +909,7 @@
 						the models are testing using the test dataset. The three models performed well, with the model trained using the
 						Adam optimizer performing the best:
 						<div class="container" style="height: 5em; width: 100%;">
-						$$ L_{GD} = 0.182, L_{RMS} = 0.179, L_{Adam} = 0.147 $$
+						$$ L_{GD} = 0.094, L_{RMS} = 0.100, L_{Adam} = 0.078 $$
 						</div>
 					</p>
 					The jupyter notebook used for this example case is provided below:
@@ -937,7 +937,7 @@
 				<h2>References</h2>
 					<p>Aggarwal, C. C. (2019). Neural Networks and Deep Learning: A Textbook (1st ed.). Springer Cham.</p>
 					<p>Kuhn, M., & Johnson, K. (2013). Applied Predictive Modeling. Springer.</p>
-					<p></p>Goodfellow, I., Bengio, Y., Courville, A., & Bengio, Y. (2016). Deep Learning (Vol. 1). MIT Press Cambridge.</p>
+					<p>Goodfellow, I., Bengio, Y., Courville, A., & Bengio, Y. (2016). Deep Learning (Vol. 1). MIT Press Cambridge.</p>
 
 				<br />
 				<hr>

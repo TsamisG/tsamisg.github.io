@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deep Learning using PyTorch</title>
+	<meta property="og:image" content="https://avatars.githubusercontent.com/u/9919?s=200&v=4">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400&display=swap">
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'>  
+	<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+</head>
+<body>
+    <div id="container">
+        <div id="sidebar">
+
+            <div id="sidebar-content">
+                <ul style="list-style-type: none;">
+                    <li><a href="/index.html">Home</a></li>
+                    <li><a href="/projects.html">Projects</a></li>
+                    <li><a href="/info.html">About Me</a></li>
+                    <li><a href="/contact.html">Contact</a></li>
+                </ul>
+            </div>
+
+            <div id="sidebar-contact-icons">
+                <a href="https://www.linkedin.com/in/georgios-tsamis-799992212/">
+                    <i class='fa fa-linkedin-square' style="font-size:2em; margin-right:1em;"></i>
+                </a>
+
+                <a href="https://github.com/TsamisG">
+                    <i class='fa fa-github' style="font-size:2em; margin-right:1em;"></i>
+                </a>
+
+                <a href="mailto:tsamis.g@outlook.com">
+                    <i class='fa fa-envelope-square' style="font-size:2em;"></i>
+                </a>
+
+                
+            </div>
+            
+        </div>
+
+		<div id="content">
+			<h1>Deep Learning using PyTorch</h1>
+				<p>In this mini-project, the PyTorch library is used to build a deep neural network and train it on
+					a dataset. PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.<br />
+					See more: <a href="https://pytorch.org/docs/stable/index.html">PyTorch Documentation</a>
+					
+				
+			<br />
+			<hr>
+			<br />
+
+            <h2>Project Outline</h2>
+				<p>
+					This project is organized in four sections:
+					<ul>
+						<li>Creating a Model Object: Programming a callable object for the model.</li>
+						<li>Importing the Data: Importing and preprocessing the dataset.</li>
+						<li>Training the Model: Feeding the data to the model and monitoring the process.</li>
+						<li>Testing the Model: Using a portion of the data that was not used in the training process to
+                            test the model's accuracy.
+                        </li>
+					</ul>
+				</p>
+
+            <br />
+            <hr>
+            <br />
+
+            <h2>Creating a Model Object</h2>
+                <p>
+                    In this section, the model class is created using the PyTorch library. First, the modules needed for this
+                    project are imported:
+                    <ul>
+                        <li>Numpy: To handle arrays before using the PyTorch's tensors.</li>
+                        <li>Pandas: To import the dataset.</li>
+                        <li>sklearn.utils.shuffle: To randomly shuffle the data.</li>
+                        <li>matplotlib.pyplot: To plot and visualize the errors.</li>
+                        <li>torch (and relevant sub-modules): The PyTorch library.</li>
+                    </ul>
+                </p>
+                <!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">numpy</span> <span style="color: #008800; font-weight: bold">as</span> <span style="color: #0e84b5; font-weight: bold">np</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">pandas</span> <span style="color: #008800; font-weight: bold">as</span> <span style="color: #0e84b5; font-weight: bold">pd</span>
+<span style="color: #008800; font-weight: bold">from</span> <span style="color: #0e84b5; font-weight: bold">sklearn.utils</span> <span style="color: #008800; font-weight: bold">import</span> shuffle
+<span style="color: #008800; font-weight: bold">from</span> <span style="color: #0e84b5; font-weight: bold">matplotlib</span> <span style="color: #008800; font-weight: bold">import</span> pyplot <span style="color: #008800; font-weight: bold">as</span> plt
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">torch</span> <span style="color: #008800; font-weight: bold">as</span> <span style="color: #0e84b5; font-weight: bold">T</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">torch.nn</span> <span style="color: #008800; font-weight: bold">as</span> <span style="color: #0e84b5; font-weight: bold">nn</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">torch.nn.functional</span> <span style="color: #008800; font-weight: bold">as</span> <span style="color: #0e84b5; font-weight: bold">F</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">torch.optim</span> <span style="color: #008800; font-weight: bold">as</span> <span style="color: #0e84b5; font-weight: bold">optim</span>
+</pre></div>
+
+                <p>
+                    Then, the model's class can be created.
+                    The model's class inherits the characteristics of the nn.Module object and thus the superconstructor
+                    needs to be initialized. The user needs to declare the model's input and output dimensions, the
+                    hidden layers' dimensions in a list and the learning rate. This model is used for a Regression
+                    problem, and thus the Mean Squared Error is used as the loss function. The selected optimizer
+                    is Adam and the model's weights are initialized according the the Xavier-Glorot initialization.
+                </p>
+
+                <!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-weight: bold">class</span> <span style="color: #BB0066; font-weight: bold">NeuralNetworkModel</span>(nn<span style="color: #333333">.</span>Module):
+    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">__init__</span>(<span style="color: #007020">self</span>, input_dims, output_dims, hidden_layer_dims, learning_rate):
+    <span style="color: #007020">super</span>(NeuralNetworkModel, <span style="color: #007020">self</span>)<span style="color: #333333">.</span>__init__()
+    
+    <span style="color: #007020">self</span><span style="color: #333333">.</span>layers <span style="color: #333333">=</span> nn<span style="color: #333333">.</span>ModuleList()
+    M1 <span style="color: #333333">=</span> input_dims
+    <span style="color: #008800; font-weight: bold">for</span> M2 <span style="color: #000000; font-weight: bold">in</span> hidden_layer_dims:
+        <span style="color: #007020">self</span><span style="color: #333333">.</span>layers<span style="color: #333333">.</span>append(nn<span style="color: #333333">.</span>Linear(M1, M2))
+        M1 <span style="color: #333333">=</span> M2
+
+    M2 <span style="color: #333333">=</span> output_dims
+    <span style="color: #007020">self</span><span style="color: #333333">.</span>layers<span style="color: #333333">.</span>append(nn<span style="color: #333333">.</span>Linear(M1, M2))
+
+    <span style="color: #008800; font-weight: bold">for</span> layer <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers:
+        nn<span style="color: #333333">.</span>init<span style="color: #333333">.</span>xavier_uniform_(layer<span style="color: #333333">.</span>weight)
+    
+    <span style="color: #007020">self</span><span style="color: #333333">.</span>optimizer <span style="color: #333333">=</span> optim<span style="color: #333333">.</span>Adam(<span style="color: #007020">self</span><span style="color: #333333">.</span>parameters(), lr<span style="color: #333333">=</span>learning_rate)
+    <span style="color: #007020">self</span><span style="color: #333333">.</span>loss <span style="color: #333333">=</span> nn<span style="color: #333333">.</span>MSELoss()
+</pre></div>
+
+                <p>
+                    Then, the forward method is created, which is pretty straight-forward. This method aims to forward
+                    pass the input data and return the model's output. The activation function used
+                    is the ReLU function for the hidden layers, while the output layer has no activation function.
+                    
+                </p>
+                <!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">forward</span>(<span style="color: #007020">self</span>, X):
+        <span style="color: #008800; font-weight: bold">for</span> layer <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[:<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>]:
+        X <span style="color: #333333">=</span> F<span style="color: #333333">.</span>relu(layer(X))
+    X <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>layers[<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>](X)
+    <span style="color: #008800; font-weight: bold">return</span> X
+</pre></div>
+
+                <p>
+                    Finally, the train method is created, which requires the input and output values for the train data
+                    and the validation data. The user has to declare the total number of training epochs and the
+                    rate which the method prints the training's metrics for monitoring. The train method returns
+                    the losses per epoch for the training and the validation data.
+                </p>
+                <!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">train</span>(<span style="color: #007020">self</span>, X, Y, Xval, Yval, epochs, print_every<span style="color: #333333">=</span><span style="color: #0000DD; font-weight: bold">50</span>):
+        train_losses <span style="color: #333333">=</span> []
+        val_losses <span style="color: #333333">=</span> []
+        <span style="color: #008800; font-weight: bold">for</span> epoch <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(epochs):
+            <span style="color: #007020">self</span><span style="color: #333333">.</span>optimizer<span style="color: #333333">.</span>zero_grad()
+            Yhat <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(X)
+            loss <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>loss(Y, Yhat)
+
+            Yhat_val <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>forward(Xval)<span style="color: #333333">.</span>detach()
+            val_loss <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>loss(Yval, Yhat_val)
+
+            train_losses<span style="color: #333333">.</span>append(loss<span style="color: #333333">.</span>item())
+            val_losses<span style="color: #333333">.</span>append(val_loss<span style="color: #333333">.</span>item())
+            
+            loss<span style="color: #333333">.</span>backward()
+            <span style="color: #007020">self</span><span style="color: #333333">.</span>optimizer<span style="color: #333333">.</span>step()
+            
+            <span style="color: #008800; font-weight: bold">if</span> (epoch<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>) <span style="color: #333333">%</span> print_every <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">0</span>:
+                <span style="color: #008800; font-weight: bold">print</span>(f<span style="background-color: #fff0f0">&#39;[ Epoch: {epoch+1} / {epochs} | Train MSELoss: {loss.item():.3f} | Val MSELoss: {val_loss.item():.3f}]&#39;</span>)
+        
+        <span style="color: #008800; font-weight: bold">return</span> train_losses, val_losses
+</pre></div>
+
+            <br />
+            <hr>
+            <br />
+
+			<h2>Importing the Data</h2>
+                <p>
+                    The dataset used in this project is the <a href="http://archive.ics.uci.edu/dataset/291/airfoil+self+noise">
+                    Airfoil Self-Noise Dataset</a>. It is obtained from a series of aerodynamic and acoustic tests
+                    of two and three-dimensional airfoil blade sections conducted in an anechoic wind tunnel by NASA.
+                    The dataset is imported as a pandas dataframe. The head() method is used to print the first five
+                    rows of the dataframe. The output is displayed in the table below. The input features are
+                    f, alpha, c, U_infinity and delta, and the goal is to predict the SSPL values.
+                </p>
+                <!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">dataFrame <span style="color: #333333">=</span> pd<span style="color: #333333">.</span>read_csv(<span style="background-color: #fff0f0">&#39;DataFiles/AirfoilSelfNoise.csv&#39;</span>)
+dataFrame<span style="color: #333333">.</span>head()
+</pre></div>
+                <br />
+                <table border="1" class="dataframe">
+                    <thead>
+                      <tr style="text-align: right;">
+                        <th></th>
+                        <th>f</th>
+                        <th>alpha</th>
+                        <th>c</th>
+                        <th>U_infinity</th>
+                        <th>delta</th>
+                        <th>SSPL</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <th>0</th>
+                        <td>800</td>
+                        <td>0.0</td>
+                        <td>0.3048</td>
+                        <td>71.3</td>
+                        <td>0.002663</td>
+                        <td>126.201</td>
+                      </tr>
+                      <tr>
+                        <th>1</th>
+                        <td>1000</td>
+                        <td>0.0</td>
+                        <td>0.3048</td>
+                        <td>71.3</td>
+                        <td>0.002663</td>
+                        <td>125.201</td>
+                      </tr>
+                      <tr>
+                        <th>2</th>
+                        <td>1250</td>
+                        <td>0.0</td>
+                        <td>0.3048</td>
+                        <td>71.3</td>
+                        <td>0.002663</td>
+                        <td>125.951</td>
+                      </tr>
+                      <tr>
+                        <th>3</th>
+                        <td>1600</td>
+                        <td>0.0</td>
+                        <td>0.3048</td>
+                        <td>71.3</td>
+                        <td>0.002663</td>
+                        <td>127.591</td>
+                      </tr>
+                      <tr>
+                        <th>4</th>
+                        <td>2000</td>
+                        <td>0.0</td>
+                        <td>0.3048</td>
+                        <td>71.3</td>
+                        <td>0.002663</td>
+                        <td>127.461</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                <br />
+                
+                <p>
+                    The input data is stored in the X variable and the output in the Y, which are then transformed into
+                    two-dimensional numpy arrays.
+                </p>
+
+                <!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">X <span style="color: #333333">=</span> dataFrame<span style="color: #333333">.</span>drop(<span style="background-color: #fff0f0">&#39;SSPL&#39;</span>, axis<span style="color: #333333">=</span><span style="color: #0000DD; font-weight: bold">1</span>)
+Y <span style="color: #333333">=</span> dataFrame[<span style="background-color: #fff0f0">&#39;SSPL&#39;</span>]
+X <span style="color: #333333">=</span> np<span style="color: #333333">.</span>array(X)
+Y <span style="color: #333333">=</span> np<span style="color: #333333">.</span>reshape(Y, (Y<span style="color: #333333">.</span>shape[<span style="color: #0000DD; font-weight: bold">0</span>], <span style="color: #0000DD; font-weight: bold">1</span>))
+</pre></div>
+                <p>
+                    Then, the dataset is shuffled and 10% is set aside for the model's testing after the training.
+                </p>
+                <!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">X, Y <span style="color: #333333">=</span> shuffle(X, Y)
+
+split <span style="color: #333333">=</span> <span style="color: #007020">int</span>(<span style="color: #6600EE; font-weight: bold">0.9</span><span style="color: #333333">*</span>X<span style="color: #333333">.</span>shape[<span style="color: #0000DD; font-weight: bold">0</span>])
+
+Xtrain <span style="color: #333333">=</span> X[:split,:]
+Ytrain <span style="color: #333333">=</span> Y[:split,:]
+
+Xtest <span style="color: #333333">=</span> X[split:,:]
+Ytest <span style="color: #333333">=</span> Y[split:,:]
+</pre></div>
+
+                <p>
+                    The dataset is then standard scaled to have zero mean and unit standard deviation. Of course,
+                    in the mean's and standard deviation's calculations, only the train datapoints are used, otherwise
+                    undesired bias would be introduced in the training data.
+                    $$ \tilde{X} = \frac{X - \mu_X}{\sigma_X}, \tilde{Y} = \frac{Y - \mu_Y}{\sigma_Y} $$
+                </p>
+
+
+                <!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">Xmean <span style="color: #333333">=</span> np<span style="color: #333333">.</span>mean(Xtrain, axis<span style="color: #333333">=</span><span style="color: #0000DD; font-weight: bold">0</span>)
+Xstd <span style="color: #333333">=</span> np<span style="color: #333333">.</span>std(Xtrain, axis<span style="color: #333333">=</span><span style="color: #0000DD; font-weight: bold">0</span>)
+Ymean <span style="color: #333333">=</span> np<span style="color: #333333">.</span>mean(Ytrain, axis<span style="color: #333333">=</span><span style="color: #0000DD; font-weight: bold">0</span>)
+Ystd <span style="color: #333333">=</span> np<span style="color: #333333">.</span>std(Ytrain, axis<span style="color: #333333">=</span><span style="color: #0000DD; font-weight: bold">0</span>)
+
+Xtrain_tilde <span style="color: #333333">=</span> (Xtrain <span style="color: #333333">-</span> Xmean)<span style="color: #333333">/</span>Xstd
+Ytrain_tilde <span style="color: #333333">=</span> (Ytrain <span style="color: #333333">-</span> Ymean)<span style="color: #333333">/</span>Ystd
+Xtest_tilde <span style="color: #333333">=</span> (Xtest <span style="color: #333333">-</span> Xmean)<span style="color: #333333">/</span>Xstd
+Ytest_tilde <span style="color: #333333">=</span> (Ytest <span style="color: #333333">-</span> Ymean)<span style="color: #333333">/</span>Ystd
+</pre></div>
+
+                <p>
+                    The numpy arrays are then transformed into PyTorch tensors, which is required to use the
+                    created model.
+                </p>
+
+                <!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">Xtrain_tilde <span style="color: #333333">=</span> T<span style="color: #333333">.</span>Tensor(Xtrain_tilde)
+Ytrain_tilde <span style="color: #333333">=</span> T<span style="color: #333333">.</span>Tensor(Ytrain_tilde)
+
+Xtest_tilde <span style="color: #333333">=</span> T<span style="color: #333333">.</span>Tensor(Xtest_tilde)
+Ytest_tilde <span style="color: #333333">=</span> T<span style="color: #333333">.</span>Tensor(Ytest_tilde)
+</pre></div>
+
+                <p>
+                    Finally, 20% of the train datapoints are used as the validation set, and the rest 80% is used
+                    in the model's parameters optimization.
+                </p>
+                <!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">val_split <span style="color: #333333">=</span> <span style="color: #007020">int</span>(<span style="color: #6600EE; font-weight: bold">0.2</span><span style="color: #333333">*</span>Xtrain_tilde<span style="color: #333333">.</span>shape[<span style="color: #0000DD; font-weight: bold">0</span>])
+
+Xval <span style="color: #333333">=</span> Xtrain_tilde[:val_split,:]
+Yval <span style="color: #333333">=</span> Ytrain_tilde[:val_split,:]
+
+Xtrain_tilde <span style="color: #333333">=</span> Xtrain_tilde[val_split:,:]
+Ytrain_tilde <span style="color: #333333">=</span> Ytrain_tilde[val_split:,:]
+</pre></div>
+
+            <br />
+            <hr>
+            <br />
+
+			<h2>Training the Model</h2>
+                <p>
+                    A model is instanced by calling the model object created previously. The selected architecture
+                    includes three hidden layers, with 50 neurons for the first two and 25 neuros for the third.
+                    The learning rate is set to \( 10^{-3} \).
+                </p>
+                <!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">model <span style="color: #333333">=</span> NeuralNetworkModel(X<span style="color: #333333">.</span>shape[<span style="color: #0000DD; font-weight: bold">1</span>], Y<span style="color: #333333">.</span>shape[<span style="color: #0000DD; font-weight: bold">1</span>], [<span style="color: #0000DD; font-weight: bold">50</span>, <span style="color: #0000DD; font-weight: bold">50</span>, <span style="color: #0000DD; font-weight: bold">25</span>], learning_rate<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">1e-03</span>)
+</pre></div>
+                <p>
+                    Then, the model is trained using the train method for a total of 2000 epochs. In Figure 1 below,
+                    the convergence of the learning process is showcased.
+                </p>
+                <!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">train_losses, val_losses <span style="color: #333333">=</span> model<span style="color: #333333">.</span>train(Xtrain_tilde, Ytrain_tilde, Xval, Yval, epochs<span style="color: #333333">=</span><span style="color: #0000DD; font-weight: bold">2000</span>, print_every<span style="color: #333333">=</span><span style="color: #0000DD; font-weight: bold">100</span>)
+</pre></div>
+                <figure>
+                    <img src="/images/pytorch/loss_per_epoch.png"/>
+                    <figcaption>Fig. 1 - The training and validation losses per training epoch.
+                    </figcaption>
+                </figure>
+
+                <br />
+                <hr>
+                <br />
+
+                <h2>Testing the Model</h2>
+                    <p>
+                        In order to test the model's accuracy, the testing datapoints are used to make predictions.
+                        The model's predictions are then rescaled using the calculated mean and standard deviation.
+                        To compare the model's predictions with the ground truth, the absolute percentage error for
+                        each prediction is calculated:
+                        $$ \text{Err} = \frac{|\hat{Y} - Y|}{R_Y} 100 \% $$
+                        Where \( R_Y = \text{max}_Y - \text{min}_Y \) is the range of the output data.
+                    </p>
+                    The mean absolute percentage error for the test datapoints is calculated: \( 3.30 \% \), which
+                    is acceptable. In Figure 2 below, the absolute percentage errors for the test examples is displayed.
+                    In Figure 3, the predictions and the ground truth for each test example is shown. The model
+                    displays high errors in a few datapoints, but overall, the model's performance is acceptable for
+                    the scope of this project.
+                    <figure>
+                        <img src="/images/pytorch/errors.png"/>
+                        <figcaption>Fig. 2 - The absolute percentage error for each testing example.
+                        </figcaption>
+                    </figure>
+
+                    <figure>
+                        <img src="/images/pytorch/predictions.png"/>
+                        <figcaption>Fig. 3 - The perdicted values are compared to the ground truth.
+                        </figcaption>
+                    </figure>
+				<br />
+				<hr>
+				<br />
+                
+                <h2>Conclusion</h2>
+					<p>
+						In conclusion, in this mini-project, the PyTorch library was used to create a neural network
+                        model for regression. The model was created in the form of a callable object with some
+                        adjustable hyperparameters such as the model's architecture. The model was then used in
+                        an example regression case. This mini-project is a good example of how simple yet effective
+                        the PyTorch library is.
+					</p>
+
+                <br />
+                <hr>
+                <br />
+                <h2>Jupyter Notebook</h2>
+                The jupyter notebook used for this project is provided below:
+					<div class="container" style="height: 100vh; width: 100%;">
+						<iframe src="/images/pytorch/Pytorch_NN.html"
+						style="height: 100%; width: 300%;"></iframe>
+					</div>
+
+                <br />
+                <hr>
+                <br />
+                <h2>References</h2>
+					<p>Aggarwal, C. C. (2019). Neural Networks and Deep Learning: A Textbook (1st ed.). Springer Cham.</p>
+					<p>Kuhn, M., & Johnson, K. (2013). Applied Predictive Modeling. Springer.</p>
+					<p>Goodfellow, I., Bengio, Y., Courville, A., & Bengio, Y. (2016). Deep Learning (Vol. 1). MIT Press Cambridge.</p>
+                    <p>Brooks, Thomas, Pope, D., and Marcolini, Michael. (2014). Airfoil Self-Noise. UCI Machine Learning Repository.
+                        <a href="https://doi.org/10.24432/C5VW2C">https://doi.org/10.24432/C5VW2C</a>.</p>
+                    <p>Pytorch Documentation (<a href="https://pytorch.org/docs/stable/index.html">https://pytorch.org/docs/stable/index.html</a>)</p>
+                    
+                    <br />
+				<hr>
+				<br />
+				<a href="/projects.html" class="button">Back to Projects</a>
+				<br />
+				<br />
+	
+	</div>
+
+	</body>
+</html>
