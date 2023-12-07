@@ -142,7 +142,7 @@ figure figcaption {
 }
 
 .image-container-index {
-    width: 28%; /* Display two images side by side on PC */
+    width: 30%; /* Display two images side by side on PC */
     margin: 1%; /* Add some margin between images */
     margin-bottom: 5%;
     box-sizing: border-box; /* Include padding and border in the width */
