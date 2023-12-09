@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reacher - Continuous Action Spaces with DDPG</title>
+	<meta property="og:image" content="https://avatars.githubusercontent.com/u/9919?s=200&v=4">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/25/25231.png" type="image/png" sizes="16x16 32x32 64x64">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400&display=swap">
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'>  
+	<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+</head>
+<body>
+    <div id="container">
+        <div id="sidebar">
+
+            <div id="sidebar-content">
+                <ul style="list-style-type: none;">
+                    <li><a href="/index.html">Home</a></li>
+                    <li><a href="/projects.html">Projects</a></li>
+                    <li><a href="/info.html">About Me</a></li>
+                    <li><a href="/contact.html">Contact</a></li>
+                </ul>
+            </div>
+
+            <div id="sidebar-contact-icons">
+                <a href="https://www.linkedin.com/in/georgios-tsamis-799992212/">
+                    <i class='fa fa-linkedin-square' style="font-size:2em; margin-right:1em;"></i>
+                </a>
+
+                <a href="https://github.com/TsamisG">
+                    <i class='fa fa-github' style="font-size:2em; margin-right:1em;"></i>
+                </a>
+
+                <a href="mailto:tsamis.g@outlook.com">
+                    <i class='fa fa-envelope-square' style="font-size:2em;"></i>
+                </a>
+
+                
+            </div>
+            
+        </div>
+
+		<div id="content">
+			<h1>Reacher - Continuous Action Spaces with DDPG</h1>
+				<p>In this project, the OpenAI's MuJoCo Reacher Gym environment is solved by using the Deep Deterministic Policy
+					Gradient method. In this problem, the agent is tasked with moving a simple two-jointed robot arm
+                    to reach a target which is spawned at a random position.<br />
+				    See more: 
+					<a href="https://www.gymlibrary.dev/environments/mujoco/reacher/"> Reacher - Gym Documentation</a></p>
+
+            <br />
+			<hr>
+			<br />
+			<h2>Analysis and Design</h2>
+                
+                <h3>The Environment</h3>
+                    <p>
+                        The Reacher environment, offered by the OpenAI's MuJoCo Gym library, contains a simple 2-DoF robotic arm
+                        in a planar configuration. The agent is tasked with controlling the torque values applied at the
+                        arm's joints, with the goal of reaching a randomly spawned target.<br />
+                        $$ A = \{ a_1, a_2 \} $$
+                        In this sense, the action space
+                        is continuous as the agent's actions are real-valued numbers:
+                        $$ A = [-1,1] \times [-1,1] $$
+                        In this environment, the state contains 11 components:
+                        <ul>
+                            <li>Cosine of the angle of the first link.</li>
+                            <li>Cosine of the angle of the second link.</li>
+                            <li>Sine of the angle of the first link.</li>
+                            <li>Sine of the angle of the second link.</li>
+                            <li>x-Coordinate of the target.</li>
+                            <li>y-Coordinate of the target.</li>
+                            <li>Angular velocity of the first link.</li>
+                            <li>Angular velocity of the second link.</li>
+                            <li>Difference between the x-Coordinates of the arm's end-effector and the target.</li>
+                            <li>Difference between the y-Coordinates of the arm's end-effector and the target.</li>
+                            <li>Difference between the z-Coordinates of the arm's end-effector and the target.</li>
+                        </ul>
+                        As the arm lies in a plane, the last component of the state (z difference) is always zero.
+                        For that matter, this component is removed from the state, as it provides no useful information
+                        to the agent, and thus, the state is composed of the first ten components:
+                        
+                        <div class="container" style="height: 5em; width: 100%;">
+                            $$ S = \{ \text{cos}(\theta _1), \text{cos}(\theta _2), \text{sin}(\theta _1), \text{sin}(\theta _2),
+                            x_T, y_T, \dot{\theta _1}, \dot{\theta _2}, \delta x_1 \delta x_2 \} $$
+                        </div>
+                    </p>
+
+                <h3>The Reward Function</h3>
+                    <p>
+                        The Reacher environment returns a reward which consists of two parts: the reward related to the
+                        distance of the end-effector to the target and the reward related to the joints' control.
+                        However, for this project, a custom reward function is used. The reward function was designed
+                        through experimentation. At each step, the reward is calculated as follows:
+                        $$ r = - \left( k_d r_d + k_c r_c + k_{KE} r_{KE} \right)$$
+                        Where:
+                        <ul>
+                            <li>\( r_d \): is the reward related to the distance of the end-effector and the target.</li>
+                            <li>\( r_c \): is the reward related to the joints' control.</li>
+                            <li>\( r_{KE} \): is the reward related to the mechanism's kinetic energy.</li>
+                            <li>\( k_d, k_c, k_{KE} \) are the weight coefficients of each reward respectivelly. Of course
+                                these coefficients must sum to 1: \( k_d + k_c + k_{KE} = 1\)
+                            </li>
+                        </ul>
+                        Each reward component is calculated as follows:
+                        $$ r_d = \frac{d}{d_{max}} $$
+                        Where d is the distance of the end-effector to the target: \( d = \sqrt{\delta x^2 + \delta y^2} \)
+                        The denominator is the maximum possible distance, as the arm's links have lengths: \( l_1 = 0.1, l_2 = 0.11 \).
+                        The maximum distance occurs in the scenario where the target is on the maximum circumference of the workspace
+                        and the end-effector lies on the diametrically opposed point: \( d_{max} = 2(0.1 + 0.11) = 0.42 \).
+                        $$ r_c = \frac{|a_1|+|a_2|}{2} $$
+                        Where \( |a_1|, |a_2| \) are the absolute values of the torques applied on the first and second joint
+                        respectivelly. The absolute sum is divided by the sum of the maximum absolute torque values, which is 2.
+                        $$ r_{KE} = \frac{0.5(\omega_1 ^2 + \omega_2 ^2)}{2 \cdot 10^4} $$
+                        Where \( \omega_1, \omega_2 \) are the rotational speeds of each link respectivelly. The denominator is the
+                        maximum value of the nominator, which was experimentally found by continuously applying the maximum torque
+                        for a large number of steps to the joints.<br />
+                        The weight coefficients are selected as follows:
+                        $$ k_d = 0.5, k_c = 0.1, k_{KE} = 0.4 $$
+                    </p>
+                
+                <h3>The Deep Deterministic Policy Gradient Method</h3>
+                    <p>
+                        While DQN is arguably one of the most famous Reinforcement Learning algorithms, it is only
+                        eligible for applications with discrete action spaces. From the other hand,
+                        Deep Deterministic Policy Gradient (DDPG) is a
+                        policy gradient method that handles continuous action spaces, which makes it a rational
+                        choice for this project. DDPG utilizes the actor-critic approach: one approximator
+                        is used to predict the optimal action and one approximator predicts the value of that
+                        state-action pair. The methodology also proposes the uses of target networks,
+                        which are used to calculate the target values.
+                        Specifically, DDPG implements the following actor-critic networks:
+                        <ul>
+                            <li>Actor Network: Predicts the actions \( \mu = \mu (s|\theta ^\mu) \)</li>
+                            <li>Critic Network: Predicts the Q-Values \( Q = Q (s, a |\theta ^Q) \)</li>
+                            <li>Target-Actor Network: Predicts the actions
+                                \( \mu ' = \mu '(s|\theta ^\mu) \)</li>
+                            <li>Target-Critic Network: Predicts the Q-Values
+                                \( Q ' = Q '(s, a |\theta ^Q) \)</li>
+                        </ul>
+                        The actor-critic networks are updated at each step of the agent by taking a gradient step, while
+                        the target networks are soft-updated. This process is furtherly explained in the networks
+                        section below.<br />
+                        The actor network is responsible for predicting the action at each state. To make the network
+                        robust and also help the exploration aspect of the agent, noise is added to the predicted
+                        actions. At each time step t:
+                        $$ a_t = \mu (s_t|\theta ^\mu) + \mathcal{N} _t $$
+                        Where \( \mathcal{N}\) is a noise value, drawn from a noise distribution.<br />
+                        The proposed methodology also implements the Memory-Replay feature, which is used in
+                        other projects too (e.g. See <a href="/projects/lunarLander.html">Lunar Lander</a>).<br />
+                    </p>
+
+                <h3>The Actor-Critc Networks</h3>
+                    <p>
+                        The actor network is modelled as a simple neural network with two hidden layers, which uses
+                        the current state as the input and predicts the optimal action. From the other hand, the critic
+                        network, which is also a two-hidden-layer neural network, uses the state as the input,
+                        and passes it through the first hidden layer. The second hidden layer is given
+                        a concatenated vector as the input, which includes the first layer's outputs together
+                        with the action vector. In this way, the state-action pair is used to predict the Q-Value
+                        by the output layer. At each step, the actor-critic networks are updated by taking a stochastic
+                        gradient step, using a mini-batch from the memory.<br />
+                        The critic network aims to predict the expected value of the state-action pair (the target
+                        values). To calculate the target value, the target networks are used:
+                        $$ G_t = r_t + \gamma Q'(s_{t+1}, \mu '(s_{t+1}|\theta ^{\mu '})| \theta ^{Q'}) $$
+                        In this sense, the critic network's loss function is the MSE of the target values and the predicted
+                        Q-Values:
+                        $$ J_{\text{critic}} = \frac{1}{N} \sum _i ^N (G_i - Q(s_i, a_i|\theta ^Q))^2 $$
+                        The actor network aims to predict the optimal action given the state, which is the action
+                        with the maximum Q-Value. In other words, the actor networks aims to maximize the Q-Value. Thus,
+                        the loss function of the actor network is the negative of the Q-Values:
+                        $$ J_{\text{actor}} = - \frac{1}{N} \sum _i ^N Q(s_i, \mu (s_i|\theta ^{\mu})|\theta ^Q)$$
+                        The actor network outputs values in the range (-1,1), but can be rescaled to the range of action space:
+                        <div class="container" style="height: 5em; width: 100%;">
+                            $$ \alpha = \frac{\text{max}(\alpha) - \text{min}(\alpha)}{2} + \mu\ (\text{max}(\alpha) - \text{min}(\alpha)) $$
+                        </div>
+                    </p>
+                <figure>
+                    <img src="/images/reacherDDPG/actor-critic-networks.png"/>
+                        <figcaption>Fig. 1 - A schematic of the Actor-Critic Neural Networks' architectures.</figcaption>
+                </figure>
+                <h3>The Target Actor-Critc Networks</h3>
+                    <p>
+                        At the initialization of the networks, the target networks copy their parameters from
+                        the actor-critic networks. The target networks are also updated at each agent's step,
+                        by using a soft update of the
+                        actor-critic networks' parameters:
+                        $$ \theta ^{Q'} \leftarrow \tau \theta ^Q + (1-\tau)\theta ^{Q'} $$
+                        $$ \theta ^{\mu '} \leftarrow \tau \theta ^\mu + (1-\tau)\theta ^{\mu '} $$
+                    </p>
+                
+                <h3>Noise</h3>
+                    <p>
+                        The featured methodology
+                        proposes the Ornstein-Uhlenbeck process as the noise distribution. At each time step t, the
+                        next noise value is calculated through:
+                        $$ x_{t+1} = x_t + \theta (\mu - x_t) + \sigma\ dW $$
+                        Where:
+                        $$ dW = \sqrt{dt}\ \mathcal{N} $$
+                        \( \theta, \sigma \) are parameters that define the noise distribution's characteristics,
+                        \( dt \) is the time scale,
+                        \( \mu \) is the mean of the values and \( \mathcal{N} \) is a random sample from the normal
+                        distribution with zero mean and unit variance: \( \mathcal{N} = \mathcal{N}(0,1) \)
+                    </p>
+
+                <h3>Learning through Memory Replay</h3>
+                    <p>
+                        The agent's memory is an array of the agent's past experiences. At each time step,
+                        the agent draws a mini-batch sample from its memory to update the actor-critic networks' parameters.
+                        Adding the Memory-Replay feature is crucial for the learning procedure's stability and convergence.
+                    </p>
+
+                <h3>Hyperparameter Selection</h3>
+                    <p>
+                        In this section, the agent's hyperparameters and the choice of their values are presented briefly.
+                        The hyperparameters where chosen using the original DDPG publication as a guide, but also through
+                        experimentation with a range of values.
+                        <ul>
+                            <li>Actor-Critic Networks Architecture:
+                                <ul>
+                                    <li>Hidden Layer 1: 400 neurons</li>
+                                    <li>Hidden Layer 2: 300 neurons</li>
+                                </ul>
+                            <li>Actor Network activation functions: ReLU for the hidden layers and tanh for the output layer.</li>
+                            <li>Critic Network activation functions: ReLU for the hidden layers and linear for the output layer.</li>
+                            <li>Actor Network Learning Rate: \( 10^{-5} \)</li>
+                            <li>Critic Network Learning Rate: \( 5\cdot 10^{-4} \)</li>
+                            <li>Optimizer: Adam</li>
+                            <li>\(\tau = 10^{-3}\)</li>
+                            <li>Batch Size: 128</li>
+                            <li>\(\gamma = 0.99 \)</li>
+                            <li>Memory Size: 10'000</li>
+                                
+                            </li>
+
+                        </ul>
+                    </p>
+            
+            <br />
+            <hr>
+            <br />
+            <h2>The Training Process</h2>
+                <p>
+                    The training lasted for 500 episodes, each episode having a maximum number of 200 steps. The running
+                    average reward plot with confidence interval of 95% is shown in Figure 2.
+                    Although the agent's performance
+                    is not optimal, the training seems to be successful as the running average reward converges smoothly
+                    to a maximum. The confidence interval's bounds seem to converge too.
+                </p>
+                <figure>
+                    <img src="/images/reacherDDPG/running_avg.png"/>
+                        <figcaption>Fig. 2 - Running Average plot with Confidence Intervals of 95%.</figcaption>
+                </figure>
+            
+            <br />
+            <hr>
+            <br />
+
+            <h2>Testing the Agent</h2>
+                <p>
+                    The agent is tested in a testing episode. The agent seems to understand the dynamics of the problem
+                    and achieves a reward of -7.35, which is good enough, given its short training.
+                    The agent's performance in the testing episode
+                    can be seen in Figure 3 below. The agent rushes to move the arm to the target point, as
+                    it has learned that it will be "punished" for each time step away from it. The agent also
+                    controls the arm to stop it around the target to reduce the integral of the kinetic energy.
+                </p>
+                <figure>
+                    <img src="/images/reacherDDPG/Reacher.gif"/>
+                        <figcaption>Fig. 3 - The agent's performance in the testing episode.</figcaption>
+                </figure>
+            
+            <br />
+            <hr>
+            <br />
+            <h2>Python Scripts and Jupyter Notebook</h2>
+                <p>
+                    The main python script written for this project, which contains all the necessary classes,
+                    can be found in my Github repository <a href="https://github.com/TsamisG/ReacherDDPG">ReacherDDPG</a>,
+                    in the <a href="https://github.com/TsamisG/ReacherDDPG/blob/main/DDPG_Utils.py">DDPG_Utils.py</a> script.
+                    The trained actor network, which the only necessary network to test the agent, can be found
+                    under the directory
+                    <a href="https://github.com/TsamisG/ReacherDDPG/tree/main/ReacherModels">ReacherModels</a>.
+                    The Jupyter Notebook used for the agent's training can be found in the
+                    <a href="https://github.com/TsamisG/ReacherDDPG/blob/main/Reacher_Training.ipynb">Reacher_Training.ipynb</a> file,
+                    but it is also presented below:
+                    <div class="container" style="height: 100vh; width: 100%;">
+                        <iframe src="/images/reacherDDPG/Reacher_Training.html"
+                        style="height: 100%; width: 300%;"></iframe>
+                    </div>
+                </p>
+            <br />
+            <hr>
+            <br />
+            <h2>Conclusions</h2>
+                <p>
+                    In this project, the DDPG methodology is implemented to solve the OpenAI's Reacher MuJuCo Gym environment.
+                    The feature methodology tackles continuous action space problems and as it is shown, it can be effective,
+                    making the agent achieve a desired performance.
+                </p>
+            <br />
+            <hr>
+            <br />
+            <h2>References</h2>
+                <p>Lillicrap, T. P., Hunt, J. J., Pritzel, A., Heess, N., Erez, T., Tassa, Y., Silver, D., & Wierstra, D. (2019). "Continuous control with deep reinforcement learning." arXiv preprint arXiv:1509.02971.</p>
+                <p>Uhlenbeck, George E and Ornstein, Leonard S. On the theory of the brownian motion. Physical review, 36(5):823, 1930.</p>
+                <p>Aggarwal, C. C. (2019). Neural Networks and Deep Learning: A Textbook (1st ed.). Springer Cham.</p>
+                <p>Sutton, R. S., & Barto, A. G. (1998). Reinforcement Learning: An Introduction (1st ed.). MIT Press.</p>
+                <p>Ruder, S. (2016). An overview of gradient descent optimization algorithms. arXiv preprint arXiv:1609.04747.</p>
+                <p>Kingma, D. P., & Ba, J. (2017). "Adam: A Method for Stochastic Optimization." arXiv preprint arXiv:1412.6980.</p>
+            <br />
+            <hr>
+            <br />
+            <a href="/projects.html" class="button">Back to Projects</a>
+            <br />
+            <br />
+	
+	</div>
+
+	</body>
+</html>
