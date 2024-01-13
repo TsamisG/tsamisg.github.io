@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TurtleChase - Incorporating RL in ROS</title>
+	<meta property="og:image" content="https://avatars.githubusercontent.com/u/9919?s=200&v=4">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/25/25231.png" type="image/png" sizes="16x16 32x32 64x64">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400&display=swap">
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'>  
+	<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+</head>
+<body>
+    <div id="container">
+        <div id="sidebar">
+
+            <div id="sidebar-content">
+                <ul style="list-style-type: none;">
+                    <li><a href="/index.html">Home</a></li>
+                    <li><a href="/projects.html">Projects</a></li>
+                    <li><a href="/info.html">About Me</a></li>
+                    <li><a href="/contact.html">Contact</a></li>
+                </ul>
+            </div>
+
+            <div id="sidebar-contact-icons">
+                <a href="https://www.linkedin.com/in/georgios-tsamis-799992212/">
+                    <i class='fa fa-linkedin-square' style="font-size:2em; margin-right:1em;"></i>
+                </a>
+
+                <a href="https://github.com/TsamisG">
+                    <i class='fa fa-github' style="font-size:2em; margin-right:1em;"></i>
+                </a>
+
+                <a href="mailto:tsamis.g@outlook.com">
+                    <i class='fa fa-envelope-square' style="font-size:2em;"></i>
+                </a>
+
+                
+            </div>
+            
+        </div>
+
+		<div id="content">
+			<h1>TurtleChase - Incorporating RL in ROS</h1>
+				<p>In this project, a game is designed using the turtlesim node in ROS, and an agent is called to learn to
+                    play the game by training it using DQN with Memory-Replay. This project is a gentle introduction to
+                    implementing Reinforcement Learning tactics in Robotics.
+
+                </p>
+
+            
+            <br />
+			<hr>
+			<br />
+			<h2>Analysis and Design</h2>
+                
+                <h3>The Environment</h3>
+                    <p>
+                        In this project, the environment is shaped using the turtlesim node in ROS. The game is simple:
+                        a turtle navigates in a 2-D space with the goal of reaching another turtle (target). When the
+                        target turtle is reached, it is respawned in a random location, and the game continues.<br />
+                        Using the turtlesim
+                        node, a simple subscriber-publisher node can be created which:
+                        <ul>
+                            <li>Subscribes to the "/turtle1/pose" topic and stores the turtle's pose vector, and</li>
+                            <li>Publishes to the "/turtle1/cmd_vel" topic and transfers the suitable command to
+                                control the turtle's velocity.</li>
+                        </ul>
+                        For this game, 4 discrete actions are designed for the agent to choose from at each step:
+                        <ul>
+                            <li>0: Wait in position.</li>
+                            <li>1: Move straight ahead.</li>
+                            <li>2: Rotate counter-clockwise.</li>
+                            <li>3: Rotate clockwise.</li>
+                        </ul>
+                        The velocity values asigned for the translational movement is 2 m/s and for the rotational ones 2 rad/s.
+                        Each action is executed for an assigned time interval (set to 0.2 seconds).
+                        <br />
+                        In this sense, the action space is:
+                        $$ A = \{ 0, 1, 2, 3 \} $$
+                        <br />
+                        In this game, the state is designed to include 5 components:
+                        <ul>
+                            <li>The x-Coordinate of the controlled turtle, bounded in approximately \( [0, 11] \).</li>
+                            <li>The y-Coordinate of the controlled turtle, bounded in approximately \( [0, 11] \).</li>
+                            <li>The orientation angle theta of the controlled turtle, bounded in \( [-\pi , \pi] \).</li>
+                            <li>The x-Coordinate of the target turtle, bounded in approximately \( [0, 11] \).</li>
+                            <li>The y-Coordinate of the target turtle, bounded in approximately \( [0, 11] \).</li>
+                        </ul>
+                        
+                        $$ S = \{ x, y, \theta, x_T, y_T \} $$
+                        
+                    </p>
+
+                <h3>The Reward Function</h3>
+                    <p>
+                        As in every RL case, a reward system is used to train the agent in a specific task. In this case,
+                        the agent has to constantly move towards the target; hence the name TurtleChase. The reward system
+                        designed for this game is simple: at each step, the agent is rewarded based on its distance from
+                        the target, using the following function:
+                        $$ r(d) = e ^{-\frac{d}{5}} $$
+                        Then, at each step, the reward is reduced by one, to motivate the agent to reach the target as
+                        fast as possible. Finally, a reward of 100 is acquired every time the agent reaches the target.
+                    </p>
+                
+                <h3>The Memory Feature</h3>
+                    <p>
+                        Adding a memory element in the agent is crucial for this type of applications, as it
+                        allows the agent to store and replay past experiences. Instead of learning from consecutive
+                        experiences, DQN randomly samples from its memory to break correlations between
+                        consecutive experiences. This helps in stabilizing and improving the training process.<br />
+
+                        In this project, the agent's memory is modelled as an object with five arrays; one corresponding
+                        to each of the following: current state, action taken, reward acquired, next state, termination
+                        flag.<br />
+                    </p>
+
+                <h3>The Q-Value Approxmator - Deep Q-Network</h3>
+                    <p>
+                        In DQN applications, the Q-Value Approximator is a deep neural networks that maps the current state
+                        to the Q-Values corresponding to each discrete action. In this case, the Q-Value Approximator
+                        is a Deep Neural Network model that maps the state to the
+                        corresponding Q-Values. Hence, a Deep Q-Network object is created using the PyTorch library.<br />
+                        The DQN's selected architecture is presented below:
+                        <ul>
+                            <li>Layer 1: Dense Layer with 256 neurons, activated through the ReLU function.</li>
+                            <li>Layer 2: Dense Layer with 256 neurons, activated through the ReLU function.</li>
+                            <li>Layer 3: Dense Layer with 4 neurons (one for each discrete action).</li>
+                        </ul>
+                        As per usual, Q-Learning is applied as the learning process and thus, the update rule is
+                        the following:
+                        <div class="container" style="height: 5em; width: 100%;">
+                            $$ w_{t+1} = w_t + \alpha \nabla _w (r + \gamma \text{max}_{a_2}Q(s_2, a_2) - \hat{Q}(s,a))$$
+                        </div>
+                        Thus, the loss function is the following (the \( \frac{1}{2} \) term is absorbed in the learning rate):
+                        $$ J = (r + \gamma \text{max}_{a_2}Q(s_2, a_2) - \hat{Q}(s,a))^2 $$
+                        The selected optimizer is Adam with a learning rate of \( 5\cdot 10^{-4} \).<br />
+                        In this application, two DQNs are used; one for evaluating \( Q(s,a) \) and one
+                        for calculating the target values \( \text{max}_{a_2}Q(s_2, a_2)\). The Evaluation Network
+                        gets updated at each agent's step, while the Target Network refreshes its parameters by copying
+                        the Evaluation Network's every N steps (set to 1000).
+                        This technique makes the agent's learning much more stable.<br />
+                    </p>
+
+                
+                    <h3>The Agent</h3>
+                    <p>
+                        The agent for this project is created as an object and is given the following characteristics:
+                        <ul>
+                            <li>Memory with a buffer of 6000 steps.</li>
+                            <li>One Evaluation and one Target DQN.</li>
+                            <li>Action Selection through Epsilon-Greedy - \( \epsilon = 0.1 \)</li>
+                            <li>Discount Factor: \( \gamma = 0.99 \)</li>
+                            <li>Batch size for each gradient step: 128</li>
+                        </ul>
+                    </p>
+
+                
+            <br />
+            <hr>
+            <br />
+            <h2>ROS Implementation</h2>
+                <h3>turtle_step.py</h3>
+                    <p>
+                        This script includes the subscriber-publisher node that receives information about the turtle's
+                        pose and sends the velocity command to the turtlesim node based on the action value. It can be found
+                        in the Github repository:
+                        <a href="https://github.com/TsamisG/turtleChase/blob/main/turtle_step.py">turtle_step.py</a><br />
+                        <br />
+                        In the initialization method, the publisher and the subscriber are initialized. Other
+                        useful variables are also set, such as the node spin rate,
+                        the command time interval and the action-to-command mapping. The
+                        pose variable is also initialized.<br />
+                        <br />
+                        The pose_callback method is just a simple subscriber callback method, that assigns the pose reading to the
+                        current_pose variable.<br />
+                        <br />
+                        The move method creates a Twist message and sets the velocity command based on the action value
+                        for the time interval specified. After the action is executed, it returns the first three components
+                        of the state: the turtle's x coordinate, the turtle's y-coordinate and the turtle's orientation angle.
+                    </p>
+                <h3>DQN_utils.py</h3>
+                    <p>
+                        This script includes all of the utilities needed for the RL implementation. It can be found in the
+                        Github repository <a href="https://github.com/TsamisG/turtleChase/blob/main/DQN_utils.py">DQN_utils</a>.<br />
+                        <br />
+                        Firstly, the DQNetwork object is created, which inherits its attributes from the nn.Module object
+                        of the Python library. The DQNetwork object requires the neural network's input, hidden and output
+                        dimensions, as well as the learning rate to be created. In the initialization method,
+                        the super-initializer is called, and then the network's layers are appended based on the hidden layer
+                        dimensions. Finally, the model's optimizer is set to Adam. In the forward method, a standard feed-forward
+                        procedure is set, with the ReLU as the input and hidden layers' activation function. As the network
+                        is used to predict the Q-values, the output layer uses no activation function.<br />
+                        <br />
+                        Next, the Memory object is created. The Memory object is used by the Agent; it stores each transition
+                        as data to be used for the learning process. The Memory object includes a numpy array for each of the
+                        following: the current state, the action taken, the reward acquired, the next state and the termination
+                        flag. A running index variable is used to assign values to the corrent numpy array's row, and a fill flag,
+                        which becomes true when the memory is filled with transitions. In the save_transition method, the
+                        each transition component is stored in the corresponding array. In the sample_batch method, a batch
+                        is sampled from the memory, with size according to the given batch size.<br />
+                        <br />
+                        The final object is the Agent object. In the initialization method, the gamma and epsilon values are
+                        assigned, as well as the batch size. The memory and the DQNs are initialized (evaluation and target).
+                        Two choose_action methods are created; one for the learning process which chooses an action based on
+                        the epsilon-greedy method and one which chooses action deterministically based on the maximum Q-value.
+                        Next, the learn method is created which updates the evaluation network's parameters based on the Q-learning
+                        method. Finally, the update_target method copies the evaluation network's parameters if the
+                        counter is a multiple of the given N steps.<br />
+                    </p>
+
+                <h3>turtleChase.py</h3>
+                    <p>
+                        This is the main script for the Turtle Chase game. It can be found in the Github repository
+                        <a href="https://github.com/TsamisG/turtleChase/blob/main/turtleChase.py">turtleChase.py</a>.<br />
+                        <br />
+                        Starting off, the ChaseEnvironment is created, which is responsible for setting the game's environment
+                        at each step. It includes the turtleMover object. <br />
+                        <br />
+                        The reset method resets the turtlesim node and spawns a second turtle, which is the target turtle.
+                        It sets the initial distance also returns the initial state of the game.<br />
+                        <br />
+                        The SpawnTarget method uses the "/spawn" service of the turtlesim node. The target's location is
+                        set by randomly creating two numbers in the range \( [0,11] \); one for the target's x-coordinate
+                        and one for the y-coordinate. An additional random number is generated in the range \( [-\pi, \pi] \)
+                        for the target's orientation angle (it is not used in the game, it is randomized for the sake of
+                        completeness).<br />
+                        <br />
+                        The TeleportTarget method uses the "/teleport_absolute" service of the "/turtle_target" turtle in the
+                        turtlesim node. It randomly sets the location of the target turtle similarly to the SpawnTarget
+                        method. <br />
+                        <br />
+                        The ClearTraces method erases the turtles' paths by using the "/clear" service of the turtlesim node.<br />
+                        <br />
+                        The calculateDistance method calculates the euclidian distance between the turtles and the
+                        calculateReward method returns the reward value based on the current distance. <br />
+                        <br />
+                        The step method moves the turtle based on the action value by using the turtleMover object. Then,
+                        it creates the state array, sets the termination flag accordingly and uses the calculateReward method.
+                        It returns the next state, the reward and the termination flag, in a similar fashion to the OpenAI
+                        Gym's API. The termination flag is set to true when the distance between the turtles is less than
+                        0.5.<br />
+                        <br />
+                        The turtleChase.py script also includes the main training loop. The Agent object and the environment
+                        are instantiated. The number of training episodes is set and the maximum steps per episode too. Then,
+                        the training loop is set. When the termination flag is true (the turtle has reached the target) and
+                        the reward is augmented by 100, the target is teleported and the traces are cleared. Also, a step
+                        with the "wait" action is taken to receive the updated state.<br />
+                    </p>
+                <br />
+                <p>
+                    In order to run the turtleChase.py script, the turtlesim node has to be executed first. The node
+                    graph can be seen in Figure 1 below.
+                </p>
+                <figure>
+                    <img src="/images/turtleChase/rosgraph.png" style="height: 50vh;"/>
+                        <figcaption>Fig. 1 - ROS node graph of the Turtle Chase game.</figcaption>
+                </figure>
+            <br />
+            <hr>
+            <br />
+            <h2>The Training Process</h2>
+                <p>
+                    The training lasted for 1200 episodes, each episode having a maximum number of 200 steps, which took
+                    approximately 20 hours, as the game is played in real time. The running
+                    average reward plot with confidence interval of 95% is shown in Figure 2.
+                    The running average score has an upward trend even after the 1200 episodes, which means the
+                    agent's performance can be further imporved. Overall, the training seems to be successful as the
+                    agent's performance imporves significantly over the episodes. 
+                    The confidence interval's bounds seem to be constant in the long run, indicating the stochasticity
+                    of the game and the score acquired.
+                </p>
+                <figure>
+                    <img src="/images/turtleChase/turtleChase_training.jpg" style="height: 50vh;"/>
+                        <figcaption>Fig. 2 - Running Average plot with Confidence Intervals of 95%.</figcaption>
+                </figure>
+            
+            <br />
+            <hr>
+            <br />
+
+            <h2>Testing the Agent</h2>
+                <p>
+                    The agent is tested in a testing episode. The agent's performance is not optimal, but for the sake
+                    of this project it is satisfactory. As it is shown, the agent seems to understand the implicit
+                    relationship between the orientation angle and the distance of the turtles, which is also the goal
+                    of this project's training.
+                </p>
+                <figure>
+                    <img src="/images/turtleChase/TurtleChase.gif"/>
+                        <figcaption>Fig. 3 - The agent's performance in the testing episode.</figcaption>
+                </figure>
+            
+            <br />
+            <hr>
+            <br />
+            <h2>Python Scripts</h2>
+                <p>
+                    All of the Python scripts used for this project can be found in my Github repository
+                    <a href="https://github.com/TsamisG/turtleChase">turtleChase</a>.
+                </p>
+            <br />
+            <hr>
+            <br />
+            <h2>Conclusions</h2>
+                <p>
+                    In this project, Reinforcement Learning was successfully implemented in a ROS toy example, which
+                    is based on the turlesim node. This project is the first step of merging RL and ROS, and acts
+                    as a bridge to incorporating RL in more complex robotics applications.
+                </p>
+            <br />
+            <hr>
+            <br />
+            <h2>References</h2>
+                <p>Watkins, C.J., Dayan, P. (1992) Technical Note: Q-Learning. Machine Learning 8, 279–292.
+                <p>Aggarwal, C. C. (2019). Neural Networks and Deep Learning: A Textbook (1st ed.). Springer Cham.</p>
+                <p>Tokic, Michel. (2010). Adaptive ε-Greedy Exploration in Reinforcement Learning Based on Value Differences. 203-210. 10.1007/978-3-642-16111-7_23. </p>
+                <p>Sutton, R. S., & Barto, A. G. (1998). Reinforcement Learning: An Introduction (1st ed.). MIT Press.</p>
+                <p>Kingma, D. P., & Ba, J. (2017). "Adam: A Method for Stochastic Optimization." arXiv preprint arXiv:1412.6980.</p>
+            <br />
+            <hr>
+            <br />
+            <a href="/projects.html" class="button">Back to Projects</a>
+            <br />
+            <br />
+	
+	</div>
+
+	</body>
+</html>
