@@ -48,7 +48,7 @@
 
 				<p>In this mini-project, the OpenAI's Lunar Lander Gym environment is solved using
 					a Neural Network to represent the agent's policy.
-					The Q-Learning algorithm is used in an episodic Monte-Carlo fashion in order to train the Agent.</p>
+					The Policy Gradient method is used in an episodic Monte-Carlo fashion in order to train the Agent.</p>
 				<p> This OpenAI's Gym environment is a classic rocket trajectory optimization problem.
 					According to Pontryagin's maximum principle, it is optimal to fire the engine at full throttle or
 					turn it off. This is the reason why this environment has discrete actions: engine on or off. The
@@ -62,16 +62,193 @@
 			<br />
 			<hr>
 			<br />
-			<h2>Under Construction!</h2>
+
+			<h2>Analysis and Design</h2>
+
+				<h3>The Environment</h3>
+				<p>In the Lunar Lander environment, the agent is tasked with controlling the lander vehicle.
+					The state space contains the vehicle's horizontal and vertical position and velocities, the vehicle's
+					orientation angle and angular speed, and two boolean variables that represent whether each leg is in
+					contact with the ground or not.
+					$$S = \{ x, y, \dot{x}, \dot{y}, \theta, \dot{\theta}, l_1, l_2 \}$$
+					The bounds for the real-valued observations are (units in SI):
+					<ul>
+						<li>\( x: [-1.5, 1.5] \)</li>
+						<li>\( y: [-1.5, 1.5] \)</li>
+						<li>\( \dot{x}: [-5, 5] \)</li>
+						<li>\( \dot{y}: [-5, 5] \)</li>
+						<li>\( \theta: [-\pi, \pi] \)</li>
+						<li>\( \dot{\theta}: [-5, 5] \)</li>
+					</ul>
+					<br />
+					The agent's possible actions are four discrete: do nothing (0), fire the left orientation engine (1),
+					fire the main engine (2), and fire the right orientation engine (3):
+					$$A = \{ 0, 1, 2, 3 \}$$
+					The goal is for the agent to safely land the vehicle on the surface. Although the
+					landing pad is at coordinates (0,0), landing outside of the landing pad is possible.
+					In addition, the lander's fuel is infinite.<br />
+					Each episode's reward is calculated as such:
+					<ul>
+						<li>If the lander moves away from the landing pad, it loses reward.</li>
+						<li>If the lander crashes, it receives an additional -100 points.</li>
+						<li>If it comes to rest, it receives an additional +100 points.</li>
+						<li>Each leg with ground contact is +10 points.</li>
+						<li>Firing the main engine is -0.3 points each frame.</li>
+						<li>Firing the side engine is -0.03 points each frame.</li>
+					</ul>
+					According to OpenAI, the environment is considered solved at 200+ points. In this project, the
+					reward calculation is edited in order to guide the solution.<br/>
+					As a starting state, the lander is spawned at the top center of the viewport
+					with a random initial force applied to its center of mass.<br/>
+					The episode is terminated if:
+					<ul>
+						<li>The lander crashes (the lander's body gets in contact with the surface).</li>
+						<li>The lander gets outside of the viewport (x coordinate is greater than 1).</li>
+						<li>The lander is not awake. According to <a href="https://box2d.org/documentation/md__d_1__git_hub_box2d_docs_dynamics.html#autotoc_md61">
+							Box2D Documentation</a>,
+							a body which is not awake is a body which does not move and does not collide with any
+							other body.</li>
+					</ul>
+				</p>
+
+				<h3>The Policy Model</h3>
+				<p>
+					In Policy Gradient methods, the idea is to use a non-linear approximator that maps the state at each time
+					step to a probability distribution of the possible actions. For discrete action spaces (like the
+					LunarLander case), the probability distribution is a Categorical distribution. Thus, the policy model
+					uses the current state as the input and outputs the probability of each discrete action. In this way,
+					by training the Policy model, the optimal actions over the state space will be more probable to be chosen.
+					By using a Policy model, the explore-exploit dilemma is also solved; at the beginning of the training,
+					each action will be more or less equally probable, providing the agent the ability to explore
+					the state-action space. However, as the learning procedure progresses,
+					the actions that lead to better outcomes will be more probable.<br />
+					Considering the above, the Policy model is designed as a neural network, that:
+					<ul>
+						<li>Uses the state as the input.</li>
+						<li>The output layer has as many neurons as the number of discrete actions.</li>
+						<li>The output is a Categorical probability distribution and thus the output values
+							must sum to 1; The Softmax activation function is used for the output layer.</li>
+					</ul>
+				</p>
+
+				<h3>The Learning Algorithm - Monte-Carlo Policy Gradient</h3>
+				<p>
+					The Monte-Carlo Policy Gradient method (also known as REINFORCE), is an episodic method that
+					samples the rewards of all the state-action pairs from the unfolding episode. After the episode is
+					terminated, the returns are calculated and then are used to update the policy model. To be exact,
+					the Policy model's loss function can be set as:
+					$$ J = G_t \ ln\ \pi (A_t | S_t , \theta) $$
+					And thus, the gradient is calculated as:
+					<div class="container" style="height: 5em; width: 100%;">
+					$$ \nabla J (\theta) = \mathbb{E} _{\pi} \left[ G_t \nabla ln\ \pi (A_t | S_t , \theta) \right]$$
+					</div>
+					This update rule aims to maximize the expected returns of the policy based on the states using
+					gradient ascent. It is noted that the models are usually updated using gradient descent, and thus the
+					loss: \( L = -J \) is used.
+					
+					
+				</p>
+
+				<h3>The Memory Feature</h3>
+				<p>
+					As the learning algorithm is a Monte-Carlo method, the agent has to be equipped with a Memory feature
+					that stores the transitions (state, action, reward, new state, termination flag) at each step. The agent
+					will then use the stored experiences to estimate the expected value of the loss's gradient. The agent's
+					memory should be cleared after each update.
+				</p>
+
+				<h3>Policy Update</h3>
+				<p>
+					The agent's policy is updated after every episode. To update the policy model, the stored experiences
+					are used to calculate the returns for each episode's step:
+					$$ G_t = \sum _{k=t+1} ^T \gamma ^{k-t-1} R_k $$
+					Then, the loss function is calculated as:
+					$$ L = - \sum _{t=1} ^T (G_t \cdot ln\ \pi (A_t | S_t, \theta)) $$
+				</p>
+
+
+				<h3>Hyperparameter Selection</h3>
+				<p>
+					As in most machine learning problems, the hyperparameters' tuning problem is posed. For this case too,
+					the algorithm's designer may approach the solution by experimenting with different hyperparameter values.
+					The settings used in this case are briefly presented below:
+					<ul>
+						<li>Number of Training Episodes: Set to 12000.</li>
+						<li>Discount Factor - \( \gamma \): Set to 0.99.</li>
+						<li>Neural Network's Architecture: A Neural Network with two hidden layers is implemented.
+							The neurons per layer are: 256, 256</li>
+						<li>Neural Network's Activation Function: For the hidden layers, the ReLU function is used, while
+							for the output layer, the Softmax activation function is implemented.</li>
+						<li>Learning Rate - \( \alpha \): Set to \( 5 \cdot 10^{-4} \)</li>
+						<li>Optimizer: Adam</li>
+					</ul>
+				</p>
+			<br />
+			<hr>
+			<br />
+	
+	
+			<h2>Python Implementation in Jupyter Notebook</h2>
+				<div class="container" style="height: 100vh; width: 100%;">
+					<iframe src="/images/LunarLanderPG/LunarLander_PG.html"
+					style="height: 100%; width: 300%;"></iframe>
+				</div>
 
 			<br />
 			<hr>
 			<br />
-
-
-			<a href="/projects.html" class="button">Back to Projects</a>
+			<h2>Results</h2>
+			<p>The trained agent is tested in a new environment (See cell [11] above). The testing episode is set
+				to last up to a maximum of 300 steps.
+				The agent successfully lands the vehicle inside the landing pad and obtains a reward of \( \approx 163 \).
+				The result is displayed in the animation below. As it can be seen, after the vehicle is landed, the agent
+				still uses the thrusters, which is not optimal.
+			</p>
+			<figure>
+				<img src="/images/LunarLanderPG/LunarLander_PG.gif"/>
+				<figcaption>Fig. 1 - The agent successfully lands the vehicle in the landing pad.</figcaption>
+			</figure>
 			<br />
+			<p>As the reward-per-episode plot is choppy due to the stochasticity of the agent's spawn
+				and the epsilon-greedy policy, the running average reward plot is prefered. In addition, the goal is to train
+				the agent to have a better "average" performance, meaning that in some episodes, the agent may perform
+				better than others. Thus, the running average reward plot contains more useful information
+				than the reward-per-episode plot. As it is shown, the average reward of the agent displays an upward trend,
+				while the confidence interval seems to converge smoothly, meaning that there is confidence that
+				the agent's performance improves over the training episodes.
+			</p>
+			<figure>
+				<img src="/images/LunarLanderPG/LunarLander_PG_training.jpg" style="height: 50vh;"/>
+				<figcaption>Fig. 2 - The running average reward over the training episodes.</figcaption>
+			</figure>
 			<br />
+
+			
+
+			<h3>Final Thoughts</h3>
+			<p>
+				In this project, the Policy Gradient method is used in a Monte-Carlo fashion, which is usually referred
+				to as REINFORCE. The methodology seems to be effective in cases such as the LunarLander environment,
+				with discrete action spaces, providing the agent a steady learning procedure, which is surprising,
+				given that it has been shown that Policy Gradient methods can be unstable.
+			</p>
+
+		<br />
+		<hr>
+		<br />
+		<h2>References</h2>
+
+			<p>Williams, R.J. (1992). Simple statistical gradient-following algorithms for connectionist reinforcement learning. Machine Learning, 8, 229–256. </p>
+			<p>Aggarwal, C. C. (2019). Neural Networks and Deep Learning: A Textbook (1st ed.). Springer Cham.</p>
+			<p>Sutton, R. S., & Barto, A. G. (1998). Reinforcement Learning: An Introduction (1st ed.). MIT Press.</p>
+			<p>Kingma, D. P., & Ba, J. (2017). "Adam: A Method for Stochastic Optimization." arXiv preprint arXiv:1412.6980.</p>
+
+		<br />
+		<hr>
+		<br />	
+		<a href="/projects.html" class="button">Back to Projects</a>
+		<br />
+		<br />
 
 	</div>
 
