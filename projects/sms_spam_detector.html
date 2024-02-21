@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS Spam Detector - NLP with Machine Learning</title>
+	<meta property="og:image" content="https://avatars.githubusercontent.com/u/9919?s=200&v=4">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/25/25231.png" type="image/png" sizes="16x16 32x32 64x64">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400&display=swap">
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'>  
+	<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+</head>
+<body>
+    <div id="container">
+        <div id="sidebar">
+
+            <div id="sidebar-content">
+                <ul style="list-style-type: none;">
+                    <li><a href="/index.html">Home</a></li>
+                    <li><a href="/projects.html">Projects</a></li>
+                    <li><a href="/info.html">About Me</a></li>
+                    <li><a href="/contact.html">Contact</a></li>
+                </ul>
+            </div>
+
+            <div id="sidebar-contact-icons">
+                <a href="https://www.linkedin.com/in/georgios-tsamis-799992212/">
+                    <i class='fa fa-linkedin-square' style="font-size:2em; margin-right:1em;"></i>
+                </a>
+
+                <a href="https://github.com/TsamisG">
+                    <i class='fa fa-github' style="font-size:2em; margin-right:1em;"></i>
+                </a>
+
+                <a href="mailto:tsamis.g@outlook.com">
+                    <i class='fa fa-envelope-square' style="font-size:2em;"></i>
+                </a>
+
+                
+            </div>
+            
+        </div>
+
+		<div id="content">
+			<h1>SMS Spam Detector - NLP with Machine Learning</h1>
+				<p>In this project, a model is trained on the SMS-Spam dataset in order to create
+                    a Spam Detector. The model is based on the LSTM base-model with
+                    embedding. The PyTorch framework is utilized.<br />
+					See more: <a href="https://www.kaggle.com/datasets/uciml/sms-spam-collection-dataset">"SMS Spam Collection Dataset"</a>
+					
+				</p>
+
+			<br />
+			<hr>
+			<br />
+
+            <h2>Project Overview</h2>
+                <p>
+                    The aim of this project is to effectively train a model to detect spam
+                    sms texts. LSTM-based models have been proven reliable in sequence processing
+                    and in natural language processing applications.
+                    For the model's implementation in this project, the PyTorch framework is used.
+                    A naive split-word-indexing system is used for the tokenization of each text message.
+                    After the model is trained, it is tested in a couple of examples.
+                </p>
+
+            <br />
+            <hr>
+            <br />
+
+            <h2>Project Outline</h2>
+                <p>
+                    The project is divided into the following sections:
+                    <ul>
+                        <li>The Dataset</li>
+                        <li>Tokenization</li>
+                        <li>The Model</li>
+                        <li>Training the Model</li>
+                        <li>Testing the Model</li>
+                    </ul>
+                </p>
+            <br />
+            <hr>
+            <br />
+
+            <h2>The Dataset</h2>
+                <p>
+                    The dataset consists of 5571 SMS text messages, which are labeled as either "Spam"
+                    or "Ham". The dataset is loaded as a Pandas dataframe, and its empty columns are
+                    removed. The dataset is imbalanced, as it can be seen in the Label Histogram
+                    in Figure 1. The dataset is then split into the training set and the test set,
+                    which is the 20% of the total dataset.
+                </p>
+                <figure>
+                    <img src="/images/sms_spam_detector/label-hist.png">
+                    <figcaption>Fig. 1 - The dataset is imbalanced, as it contains more 'Ham' labeled
+                        examples.
+                    </figcaption>
+                </figure>
+
+            <br />
+            <hr>
+            <br />
+
+            <h2>Tokenization</h2>
+                <p>
+                    In this project, the tokenization process is simple and naive: Each text example is
+                    split using the .split() method. Each unique word is considered a token. The
+                    vocabulary consists of all the unique tokens found in the training dataset.
+                    Each token is assigned an integer (index), as the machine learning models can
+                    only work with numbers. This word-to-index mapping is done through the word2idx
+                    dictionary, which also includes an index for padding (set to 0).<br/>
+                    Each text message is converted into a sequence of indexes using the word2idx
+                    dictionary. As the model is able to process a specific sequence dimension,
+                    each batch of examples is pre-padded according to the example with the maximum
+                    sequence length.
+                </p>
+                <figure>
+                    <img src="/images/sms_spam_detector/tokenization.png">
+                    <figcaption>Fig. 2 - An example of the tokenization procedure.
+                    </figcaption>
+                </figure>
+
+            <br />
+            <hr>
+            <br />
+
+            <h2>The Model</h2>
+                <p>
+                    The implemented model's architecture is presented below and in Figure 3:
+                    <ul>
+                        <li>An Embedding Layer with dimension 10</li>
+                        <li>A single LSTM layer with 2 neurons</li>
+                        <li>Fully Connected Layer with 2 neurons</li>
+                    </ul>
+                    The output is not passed through an activation function. The output's
+                    classification is as simple as comparing the output to zero. Outputs greater
+                    than zero means that the input is Spam and vice-versa.
+                    The selected loss function is the Binary Cross Entropy
+                    Loss with Logits, and the selected optimizer is Adam with the learning rate
+                    set to 0.01.<br />
+                </p>
+                <figure>
+                    <img src="/images/sms_spam_detector/model.png">
+                    <figcaption>Fig. 3 - The model's architecture.</figcaption>
+                </figure>
+                
+
+
+                <p>
+                    The model is created as a torch.nn.Module object using the PyTorch framework.
+                    The model's initialization and forward-pass methods are shown below.
+                </p>
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-weight: bold">class</span> <span style="color: #BB0066; font-weight: bold">RNN</span>(nn<span style="color: #333333">.</span>Module):
+    <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">__init__</span>(<span style="color: #007020">self</span>, n_vocab, embed_dim, n_hidden, n_rnnlayers, n_outputs, learning_rate):
+    <span style="color: #007020">super</span>(RNN, <span style="color: #007020">self</span>)<span style="color: #333333">.</span>__init__()
+    <span style="color: #007020">self</span><span style="color: #333333">.</span>V <span style="color: #333333">=</span> n_vocab
+    <span style="color: #007020">self</span><span style="color: #333333">.</span>D <span style="color: #333333">=</span> embed_dim
+    <span style="color: #007020">self</span><span style="color: #333333">.</span>M <span style="color: #333333">=</span> n_hidden
+    <span style="color: #007020">self</span><span style="color: #333333">.</span>K <span style="color: #333333">=</span> n_outputs
+    <span style="color: #007020">self</span><span style="color: #333333">.</span>L <span style="color: #333333">=</span> n_rnnlayers
+
+    <span style="color: #007020">self</span><span style="color: #333333">.</span>embed <span style="color: #333333">=</span> nn<span style="color: #333333">.</span>Embedding(<span style="color: #007020">self</span><span style="color: #333333">.</span>V, <span style="color: #007020">self</span><span style="color: #333333">.</span>D)
+    <span style="color: #007020">self</span><span style="color: #333333">.</span>LSTM <span style="color: #333333">=</span> nn<span style="color: #333333">.</span>LSTM(
+        input_size<span style="color: #333333">=</span><span style="color: #007020">self</span><span style="color: #333333">.</span>D,
+        hidden_size<span style="color: #333333">=</span><span style="color: #007020">self</span><span style="color: #333333">.</span>M,
+        num_layers<span style="color: #333333">=</span><span style="color: #007020">self</span><span style="color: #333333">.</span>L,
+        batch_first<span style="color: #333333">=</span><span style="color: #007020">True</span>)
+    <span style="color: #007020">self</span><span style="color: #333333">.</span>fc <span style="color: #333333">=</span> nn<span style="color: #333333">.</span>Linear(<span style="color: #007020">self</span><span style="color: #333333">.</span>M, <span style="color: #007020">self</span><span style="color: #333333">.</span>K)
+
+    <span style="color: #007020">self</span><span style="color: #333333">.</span>criterion <span style="color: #333333">=</span> nn<span style="color: #333333">.</span>BCEWithLogitsLoss()
+    <span style="color: #007020">self</span><span style="color: #333333">.</span>optimizer <span style="color: #333333">=</span> optim<span style="color: #333333">.</span>Adam(<span style="color: #007020">self</span><span style="color: #333333">.</span>parameters(), lr<span style="color: #333333">=</span>learning_rate)
+
+  <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">forward</span>(<span style="color: #007020">self</span>, X):
+    h0 <span style="color: #333333">=</span> torch<span style="color: #333333">.</span>zeros(<span style="color: #007020">self</span><span style="color: #333333">.</span>L, X<span style="color: #333333">.</span>size(<span style="color: #0000DD; font-weight: bold">0</span>), <span style="color: #007020">self</span><span style="color: #333333">.</span>M)
+    c0 <span style="color: #333333">=</span> torch<span style="color: #333333">.</span>zeros(<span style="color: #007020">self</span><span style="color: #333333">.</span>L, X<span style="color: #333333">.</span>size(<span style="color: #0000DD; font-weight: bold">0</span>), <span style="color: #007020">self</span><span style="color: #333333">.</span>M)
+
+    out <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>embed(X)
+
+    out, _ <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>LSTM(out, (h0, c0))
+
+    out, _ <span style="color: #333333">=</span> torch<span style="color: #333333">.</span>max(out, <span style="color: #0000DD; font-weight: bold">1</span>)
+
+    out <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>fc(out)
+    <span style="color: #008800; font-weight: bold">return</span> out
+</pre></div>
+                <p>
+                    Then the fit method is created. This method accepts the train and test datasets
+                    as inputs and fits the model onto the data with batches. For each batch, the
+                    generator function 'batch_generator' is called (see more below). The fit method by default prints
+                    out the training and testing losses of each epoch. After the training is complete,
+                    the method returns the training and testing losses per epoch.
+                </p>
+
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">  <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">fit</span>(<span style="color: #007020">self</span>, X_train, Y_train, X_test, Y_test, epochs<span style="color: #333333">=</span><span style="color: #0000DD; font-weight: bold">100</span>):
+    train_losses <span style="color: #333333">=</span> np<span style="color: #333333">.</span>zeros(epochs)
+    test_losses <span style="color: #333333">=</span> np<span style="color: #333333">.</span>zeros(epochs)
+
+    <span style="color: #008800; font-weight: bold">for</span> ep <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(epochs):
+      batch_losses <span style="color: #333333">=</span> []
+      <span style="color: #008800; font-weight: bold">for</span> inputs, targets <span style="color: #000000; font-weight: bold">in</span> batch_generator(X_train, Y_train):
+        targets <span style="color: #333333">=</span> targets<span style="color: #333333">.</span>view(<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>, <span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">.</span>float()
+        <span style="color: #007020">self</span><span style="color: #333333">.</span>optimizer<span style="color: #333333">.</span>zero_grad()
+
+        outputs <span style="color: #333333">=</span> <span style="color: #007020">self</span>(inputs)
+        loss <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>criterion(outputs, targets)
+        batch_losses<span style="color: #333333">.</span>append(loss<span style="color: #333333">.</span>item())
+        loss<span style="color: #333333">.</span>backward()
+        <span style="color: #007020">self</span><span style="color: #333333">.</span>optimizer<span style="color: #333333">.</span>step()
+
+      train_loss <span style="color: #333333">=</span> np<span style="color: #333333">.</span>mean(batch_losses)
+      train_losses[ep] <span style="color: #333333">=</span> train_loss
+
+      batch_losses <span style="color: #333333">=</span> []
+      <span style="color: #008800; font-weight: bold">with</span> torch<span style="color: #333333">.</span>no_grad():
+        <span style="color: #008800; font-weight: bold">for</span> inputs, targets <span style="color: #000000; font-weight: bold">in</span> batch_generator(X_test, Y_test):
+          targets <span style="color: #333333">=</span> targets<span style="color: #333333">.</span>view(<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>, <span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">.</span>float()
+          outputs <span style="color: #333333">=</span> <span style="color: #007020">self</span>(inputs)
+          test_loss <span style="color: #333333">=</span> <span style="color: #007020">self</span><span style="color: #333333">.</span>criterion(outputs, targets)
+          batch_losses<span style="color: #333333">.</span>append(test_loss)
+        test_loss <span style="color: #333333">=</span> np<span style="color: #333333">.</span>mean(batch_losses)
+        test_losses[ep] <span style="color: #333333">=</span> test_loss
+
+      <span style="color: #008800; font-weight: bold">print</span>(f<span style="background-color: #fff0f0">&#39;Epoch [ {ep+1} / {epochs} ]: Train Loss: {train_losses[ep]:.3f} | Test Loss: {test_losses[ep]:.3f}&#39;</span>)
+
+    <span style="color: #008800; font-weight: bold">return</span> train_losses, test_losses
+</pre></div>
+                <p>
+                    The final method of the model's object is the score method, which is used to
+                    evaluate the model's performance. It predicts the label for each training and
+                    testing example and returns the training and testing accuracies.
+                </p>
+
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">  <span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">score</span>(<span style="color: #007020">self</span>, X_train, Y_train, X_test, Y_test):
+    train_accuracies <span style="color: #333333">=</span> []
+    test_accuracies <span style="color: #333333">=</span> []
+
+    <span style="color: #008800; font-weight: bold">with</span> torch<span style="color: #333333">.</span>no_grad():
+      <span style="color: #008800; font-weight: bold">for</span> inputs, targets <span style="color: #000000; font-weight: bold">in</span> batch_generator(X_train, Y_train):
+        targets <span style="color: #333333">=</span> targets<span style="color: #333333">.</span>view(<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>, <span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">.</span>float()
+        predictions <span style="color: #333333">=</span> (model(inputs) <span style="color: #333333">&gt;</span> <span style="color: #0000DD; font-weight: bold">0</span>)<span style="color: #333333">.</span>float()
+        corrects <span style="color: #333333">=</span> torch<span style="color: #333333">.</span>zeros_like(targets)
+        corrects[targets <span style="color: #333333">==</span> predictions] <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">1</span>
+        train_accuracies<span style="color: #333333">.</span>append(corrects<span style="color: #333333">.</span>mean())
+
+      <span style="color: #008800; font-weight: bold">for</span> inputs, targets <span style="color: #000000; font-weight: bold">in</span> batch_generator(X_test, Y_test):
+        targets <span style="color: #333333">=</span> targets<span style="color: #333333">.</span>view(<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>, <span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">.</span>float()
+        predictions <span style="color: #333333">=</span> (model(inputs) <span style="color: #333333">&gt;</span> <span style="color: #0000DD; font-weight: bold">0</span>)<span style="color: #333333">.</span>float()
+        corrects <span style="color: #333333">=</span> torch<span style="color: #333333">.</span>zeros_like(targets)
+        corrects[targets <span style="color: #333333">==</span> predictions] <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">1</span>
+        test_accuracies<span style="color: #333333">.</span>append(corrects<span style="color: #333333">.</span>mean())
+    <span style="color: #008800; font-weight: bold">return</span> np<span style="color: #333333">.</span>mean(train_accuracies), np<span style="color: #333333">.</span>mean(test_accuracies)
+</pre></div>
+
+                <p>
+                    The batch_generator function yields a batch from the training dataset. Each batch
+                    example is pre-padded according to the maximum sequence length of the batch.
+                </p>
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">batch_generator</span>(X, Y, batch_size<span style="color: #333333">=</span><span style="color: #0000DD; font-weight: bold">32</span>):
+    X, Y <span style="color: #333333">=</span> shuffle(X, Y)
+    N <span style="color: #333333">=</span> <span style="color: #007020">len</span>(Y)
+    n_batches <span style="color: #333333">=</span> <span style="color: #007020">int</span>(np<span style="color: #333333">.</span>ceil(N <span style="color: #333333">/</span> batch_size))
+  
+    <span style="color: #008800; font-weight: bold">for</span> i <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(n_batches):
+      X_batch <span style="color: #333333">=</span> X[i<span style="color: #333333">*</span>batch_size:(i<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>batch_size]
+      Y_batch <span style="color: #333333">=</span> Y[i<span style="color: #333333">*</span>batch_size:(i<span style="color: #333333">+</span><span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">*</span>batch_size]
+  
+      max_len_in_batch <span style="color: #333333">=</span> np<span style="color: #333333">.</span>max([<span style="color: #007020">len</span>(x) <span style="color: #008800; font-weight: bold">for</span> x <span style="color: #000000; font-weight: bold">in</span> X_batch])
+      <span style="color: #008800; font-weight: bold">for</span> j <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #007020">len</span>(X_batch)):
+        x <span style="color: #333333">=</span> X_batch[j]
+        pad <span style="color: #333333">=</span> [<span style="color: #0000DD; font-weight: bold">0</span>] <span style="color: #333333">*</span> (max_len_in_batch <span style="color: #333333">-</span> <span style="color: #007020">len</span>(x))
+        X_batch[j] <span style="color: #333333">=</span> pad <span style="color: #333333">+</span> x
+  
+      X_batch <span style="color: #333333">=</span> torch<span style="color: #333333">.</span>from_numpy(np<span style="color: #333333">.</span>array(X_batch))<span style="color: #333333">.</span>long()
+      Y_batch <span style="color: #333333">=</span> torch<span style="color: #333333">.</span>from_numpy(np<span style="color: #333333">.</span>array(Y_batch))<span style="color: #333333">.</span>long()
+  
+      <span style="color: #008800; font-weight: bold">yield</span> X_batch, Y_batch
+  </pre></div>
+  
+            <br />
+            <hr>
+            <br />
+
+            <h2>Training the Model</h2>
+                <p>
+                    The model is fit onto the training dataset. The training lasts for only 20 epochs
+                    and the losses seem to converge. The training took under a minute to complete
+                    in a Google Colab Notebook.
+                </p>
+                <figure>
+                    <img src="/images/sms_spam_detector/convergence.png">
+                    <figcaption>Fig. 4 - The model's training convergence.</figcaption>
+                </figure>
+            <br />
+            <hr>
+            <br />
+
+            <h2>Testing the Model</h2>
+                <p>
+                    To test the model, the model's score method is called. The model achieves 99.84%
+                    accuracy in the training dataset and 98.11% in the testing one. This performance
+                    might be misleading, as the data is pretty imbalanced. <br/>
+                    In order to use the model to classify SMS text messages, a simple function is created.
+                    The function uses the model's output to print a message. If the output is greater than
+                    0, the message is classified as Spam, while if the output is less than 0, the message
+                    is classified as Safe.
+                </p>
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">out2cat <span style="color: #333333">=</span> <span style="color: #008800; font-weight: bold">lambda</span> x: <span style="background-color: #fff0f0">&#39;The SMS is Spam.&#39;</span> <span style="color: #008800; font-weight: bold">if</span> x <span style="color: #333333">&gt;</span> <span style="color: #0000DD; font-weight: bold">0</span> <span style="color: #008800; font-weight: bold">else</span> <span style="background-color: #fff0f0">&#39;The SMS is Safe.&#39;</span>
+</pre></div>
+                <p>
+                    The model is tested further, by using a random sample from the testing dataset.
+                    The sampled text is a ham (safe) message, and the model correctly classifies it.<br/>
+                    To further test the model, two messages are handwritten on the spot, and are given for
+                    classification to the model:
+                    <li>SMS 1: 'Hey, its me. Wanna hang out later? Call me'</li>
+                    <li>SMS 2: 'CONGRATZ UVE WON ONE MILLION DOLLARS! SEND ME UR CREDIT CARD INFORMATION TO RECEIVE THE PRIZE!'</li>
+                    
+                    One could argue that the first message is a common text, while the second one
+                    seems malicious. The model classifies the first as safe, and the second one as spam.<br/>
+                    Finally, the model is saved using the torch.save() method.
+                </p>
+            <br />
+            <hr>
+            <br />
+
+            <h2>Jupyter Notebook</h2>
+                <p>
+                    The notebook created for this project is provided below, but can also be found in my Github repository
+                    <a href="https://github.com/TsamisG/SMS_Spam_Classifier">SMS_Spam_Classifier</a>.
+                    The dataset, along with the trained model, can be found there too.
+                </p>
+                <div class="container" style="height: 100vh; width: 100%;">
+					<iframe src="/images/sms_spam_detector/PyTorch_SpamDetectionRNN.html"
+					style="height: 100%; width: 300%;"></iframe>
+				</div>
+
+            
+            <br />
+            <hr>
+            <br />
+            <h2>References</h2>
+                <p>Hochreiter, S., & Schmidhuber, J. (1997). Long Short-Term Memory. Neural Computation, 9(8), 1735-1780.</p>
+                <p>Aggarwal, C. C. (2019). Neural Networks and Deep Learning: A Textbook (1st ed.). Springer Cham.</p>
+                <p>Kuhn, M., & Johnson, K. (2013). Applied Predictive Modeling. Springer.</p>
+                <p>Goodfellow, I., Bengio, Y., Courville, A., & Bengio, Y. (2016). Deep Learning (Vol. 1). MIT Press Cambridge.</p>
+                <p>Liu, L., Wu, Y., Wei, W., Cao, W., Sahin, S., & Zhang, Q. (2018). Benchmarking Deep Learning Frameworks:
+                    Design Considerations, Metrics and Beyond. 2018 IEEE 38th International Conference on
+                    Distributed Computing Systems (ICDCS), 1258-1269. [doi:10.1109/ICDCS.2018.00125].</p>
+                <p>Wu, Y., Liu, L., Pu, C., Cao, W., Sahin, S., Wei, W., & Zhang, Q. (2019). A Comparative Measurement Study of Deep Learning as a Service Framework. IEEE Transactions on Services Computing, 1-1. [doi:10.1109/TSC.2019.2928551]</p>
+                <p>Wu, Y., Cao, W., Sahin, S., & Liu, L. (2018). Experimental Characterizations and Analysis of Deep Learning Frameworks. 2018 IEEE 38th International Conference on Big Data, December.</p>
+                <p>Pytorch Documentation (<a href="https://pytorch.org/docs/stable/index.html">https://pytorch.org/docs/stable/index.html</a>)</p>
+                
+            
+            <br />
+            <hr>
+            <br />
+
+
+            <a href="/projects.html" class="button">Back to Projects</a>
+            <br />
+            <br />
+	
+	</div>
+
+	</body>
+</html>
