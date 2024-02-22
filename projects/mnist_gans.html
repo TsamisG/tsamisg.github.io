@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generating Images of Handwritten Digits - Generative Adversarial Networks (GANs)</title>
+	<meta property="og:image" content="https://avatars.githubusercontent.com/u/9919?s=200&v=4">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/25/25231.png" type="image/png" sizes="16x16 32x32 64x64">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400&display=swap">
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'>  
+	<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+</head>
+<body>
+    <div id="container">
+        <div id="sidebar">
+
+            <div id="sidebar-content">
+                <ul style="list-style-type: none;">
+                    <li><a href="/index.html">Home</a></li>
+                    <li><a href="/projects.html">Projects</a></li>
+                    <li><a href="/info.html">About Me</a></li>
+                    <li><a href="/contact.html">Contact</a></li>
+                </ul>
+            </div>
+
+            <div id="sidebar-contact-icons">
+                <a href="https://www.linkedin.com/in/georgios-tsamis-799992212/">
+                    <i class='fa fa-linkedin-square' style="font-size:2em; margin-right:1em;"></i>
+                </a>
+
+                <a href="https://github.com/TsamisG">
+                    <i class='fa fa-github' style="font-size:2em; margin-right:1em;"></i>
+                </a>
+
+                <a href="mailto:tsamis.g@outlook.com">
+                    <i class='fa fa-envelope-square' style="font-size:2em;"></i>
+                </a>
+
+                
+            </div>
+            
+        </div>
+
+		<div id="content">
+			<h1>Generating Images of Handwritten Digits - Generative Adversarial Networks (GANs)</h1>
+				<p>In this project, a system of Generative Adversarial Networks (GANs) is trained
+                    to generate realistic images of handwritten digits. The MNIST dataset is used
+                    and the PyTorch framework is utilized.<br />
+					See more: <a href="http://yann.lecun.com/exdb/mnist/">"The MNIST Database"</a>
+				</p>
+
+			<br />
+			<hr>
+			<br />
+
+            <h2>Project Overview</h2>
+                <p>
+                    The aim of this project is to create an AI image generator for handwritten digits. This
+                    is done through a system of Generative Adversarial Networks (GANs), which is trained on the
+                    MNIST dataset. GANs is a system of two neural networks: the Generator and the Discriminator.
+                    In this project, the Generator generates fake images, based on random normal noise. The
+                    Discriminator then uses the fake images together with the MNIST dataset to correctly classify
+                    each image as real or fake. In this sense, two models are trained together, the Generator learns
+                    to generate more realistic images and the Discriminator learns to classify images with better
+                    accuracy.
+                </p>
+                <figure>
+                    <img src="/images/mnistGANs/gans-diagram.png">
+                    <figcaption>Fig. 1 - The system of Generative Adversarial Networks.
+                    </figcaption>
+                </figure>
+
+            <br />
+            <hr>
+            <br />
+
+            <h2>Project Outline</h2>
+                <p>
+                    The project is divided into the following sections:
+                    <ul>
+                        <li>The Dataset</li>
+                        <li>Data Transformation</li>
+                        <li>The Generator and the Discriminator Models</li>
+                        <li>Training the GANs</li>
+                        <li>Generating New Images</li>
+                    </ul>
+                </p>
+            <br />
+            <hr>
+            <br />
+
+            <h2>The Dataset</h2>
+                <p>
+                    The MNIST dataset contains 60,000 28x28 images of handwritten digits. For this project,
+                    there is no interest in what numbers they are depicting, as long as they are all real
+                    handwritten digit images. The Discriminator will learn to correctly classify images as real or fake
+                    based on this dataset. Some samples from the dataset can be seen in Figure 2.
+                </p>
+                <figure>
+                    <img src="/images/mnistGANs/mnist.png">
+                    <figcaption>Fig. 2 - Samples from the MNIST dataset.
+                    </figcaption>
+                </figure>
+                
+
+            <br />
+            <hr>
+            <br />
+
+            <h2>Data Transformation</h2>
+                <p>
+                    For this project, the transformation that is applied to the dataset is fairly simple. 
+                    First, the data is transformed into PyTorch tensors. Then, as the
+                    MNIST dataset contains grayscale images, each image is basically an array of pixel
+                    intensity values, ranging from 0 to 255. The data is normalized to be in the range [-1, 1]. This
+                    is done by subctracting the mean (0.5) and dividing by the standard deviation (which is also 0.5).<br/>
+                    The torchvision.transforms module is implemented, as it makes the aforementioned data
+                    transformation procedure very easy. The dataset is loaded and transformed using the commands shown below.
+                    As the data will be forwarded into the Discriminator model into batches, the Dataloader class is
+                    utilized. The batch size is set to 128.
+                </p>
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">transform <span style="color: #333333">=</span> transforms<span style="color: #333333">.</span>Compose([
+    transforms<span style="color: #333333">.</span>ToTensor(),
+    transforms<span style="color: #333333">.</span>Normalize(mean<span style="color: #333333">=</span>(<span style="color: #6600EE; font-weight: bold">0.5</span>,),
+                         std<span style="color: #333333">=</span>(<span style="color: #6600EE; font-weight: bold">0.5</span>,))])
+
+train_dataset <span style="color: #333333">=</span> torchvision<span style="color: #333333">.</span>datasets<span style="color: #333333">.</span>MNIST(
+    root<span style="color: #333333">=</span><span style="background-color: #fff0f0">&#39;.&#39;</span>,
+    train<span style="color: #333333">=</span><span style="color: #007020">True</span>,
+    transform<span style="color: #333333">=</span>transform,
+    download<span style="color: #333333">=</span><span style="color: #007020">True</span>)
+
+batch_size <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">128</span>
+data_loader <span style="color: #333333">=</span> torch<span style="color: #333333">.</span>utils<span style="color: #333333">.</span>data<span style="color: #333333">.</span>DataLoader(dataset<span style="color: #333333">=</span>train_dataset,
+                                          batch_size<span style="color: #333333">=</span>batch_size,
+                                          shuffle<span style="color: #333333">=</span><span style="color: #007020">True</span>)
+</pre></div>
+
+
+
+            <br />
+            <hr>
+            <br />
+
+            <h2>The Generator and the Discriminator Models</h2>
+            <h3>The Discriminator Model</h3>
+                <p>
+                    The Discriminator model is a simple 3-layered Fully Connected Neural Network, the architecture
+                    of which is presented below:
+                    <ul>
+                        <li>Fully Connected Layer with 512 neurons with LeakyReLU</li>
+                        <li>Fully Connected Layer with 256 neurons with LeakyReLU</li>
+                        <li>Fully Connected Layer with 1 neuron</li>
+                    </ul>
+                    The activation function for the first two layers is the LeakyReLU with negative slope set to 0.2.
+                    The output is not passed through an activation function. The output's
+                    classification is as simple as comparing the output to zero. Output greater
+                    than zero means that the input is a real image, while output less than zero means that the image
+                    is fake. <br/>
+                    The selected loss function is the Binary Cross Entropy
+                    Loss with Logits, and the selected optimizer is Adam with the learning rate
+                    set to 0.001 and the beta values set to 0.5 and 0.999.<br />
+                    For the Discriminator model's training, the labels of the MNIST images (the real ones) are set to 1,
+                    while the labels of the fake images generated by the Generator are set to 0. In this way, the
+                    Discriminator learns to classify the real images as real (label=1) and the fake images as fake
+                    (label=0).
+                </p>
+            <h3>The Generator Model</h3>
+                <p>
+                    The Generator model is given a deeper architecture, as its task is more demanding than the
+                    Discriminator's simple binary classification. The Generator's architecture is presented below:
+                    <ul>
+                        <li>Fully Connected Layer with 256 neurons with LeakyReLU</li>
+                        <li>Batch Normalization Layer</li>
+                        <li>Fully Connected Layer with 512 neurons with LeakyReLU</li>
+                        <li>Batch Normalization Layer</li>
+                        <li>Fully Connected Layer with 1024 neurons with LeakyReLU</li>
+                        <li>Batch Normalization Layer</li>
+                        <li>Fully Connected Layer with 784 neurons with Tanh</li>
+                    </ul>
+                    The LeakyReLU negative slope is also set to 0.2. The Batch Normalization layers' momentum is
+                    set to 0.7. The hyperbolic tangent is selected as the output's layer activation function,
+                    as it maps the data in the range [-1, 1].<br/>
+                    The selected loss function is also the Binary Cross Entropy
+                    Loss with Logits, and the selected optimizer is Adam with the learning rate
+                    set to 0.001 and the beta values set to 0.5 and 0.999.<br />
+                    The Generator's loss is calculated after the generated image is passed through the Discriminator.
+                    However, only the Generator's parameters are tuned during the Generator's training. For the
+                    Generator's training, the labels of the generated images are all set to 1 - meaning that the desired
+                    output for all of the generated images is the be classified as real.<br/>
+                    The Generator is designed to accept a 100-dimensioned randomly generated vector and to
+                    output a 784-dimensioned vector, which corresponds to a 28x28 grayscale image.
+                </p>
+
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">D <span style="color: #333333">=</span> nn<span style="color: #333333">.</span>Sequential(
+    nn<span style="color: #333333">.</span>Linear(<span style="color: #0000DD; font-weight: bold">784</span>, <span style="color: #0000DD; font-weight: bold">512</span>),
+    nn<span style="color: #333333">.</span>LeakyReLU(<span style="color: #6600EE; font-weight: bold">0.2</span>),
+    nn<span style="color: #333333">.</span>Linear(<span style="color: #0000DD; font-weight: bold">512</span>, <span style="color: #0000DD; font-weight: bold">256</span>),
+    nn<span style="color: #333333">.</span>LeakyReLU(<span style="color: #6600EE; font-weight: bold">0.2</span>),
+    nn<span style="color: #333333">.</span>Linear(<span style="color: #0000DD; font-weight: bold">256</span>, <span style="color: #0000DD; font-weight: bold">1</span>),
+)
+
+latent_dim <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">100</span>
+G <span style="color: #333333">=</span> nn<span style="color: #333333">.</span>Sequential(
+    nn<span style="color: #333333">.</span>Linear(latent_dim, <span style="color: #0000DD; font-weight: bold">256</span>),
+    nn<span style="color: #333333">.</span>LeakyReLU(<span style="color: #6600EE; font-weight: bold">0.2</span>),
+    nn<span style="color: #333333">.</span>BatchNorm1d(<span style="color: #0000DD; font-weight: bold">256</span>, momentum<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">0.7</span>),
+    nn<span style="color: #333333">.</span>Linear(<span style="color: #0000DD; font-weight: bold">256</span>, <span style="color: #0000DD; font-weight: bold">512</span>),
+    nn<span style="color: #333333">.</span>LeakyReLU(<span style="color: #6600EE; font-weight: bold">0.2</span>),
+    nn<span style="color: #333333">.</span>BatchNorm1d(<span style="color: #0000DD; font-weight: bold">512</span>, momentum<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">0.7</span>),
+    nn<span style="color: #333333">.</span>Linear(<span style="color: #0000DD; font-weight: bold">512</span>, <span style="color: #0000DD; font-weight: bold">1024</span>),
+    nn<span style="color: #333333">.</span>LeakyReLU(<span style="color: #6600EE; font-weight: bold">0.2</span>),
+    nn<span style="color: #333333">.</span>BatchNorm1d(<span style="color: #0000DD; font-weight: bold">1024</span>, momentum<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">0.7</span>),
+    nn<span style="color: #333333">.</span>Linear(<span style="color: #0000DD; font-weight: bold">1024</span>, <span style="color: #0000DD; font-weight: bold">784</span>),
+    nn<span style="color: #333333">.</span>Tanh()
+)
+
+device <span style="color: #333333">=</span> torch<span style="color: #333333">.</span>device(<span style="background-color: #fff0f0">&#39;cuda:0&#39;</span> <span style="color: #008800; font-weight: bold">if</span> torch<span style="color: #333333">.</span>cuda<span style="color: #333333">.</span>is_available() <span style="color: #008800; font-weight: bold">else</span> <span style="background-color: #fff0f0">&#39;cpu&#39;</span>)
+D <span style="color: #333333">=</span> D<span style="color: #333333">.</span>to(device)
+G <span style="color: #333333">=</span> G<span style="color: #333333">.</span>to(device)
+
+criterion <span style="color: #333333">=</span> nn<span style="color: #333333">.</span>BCEWithLogitsLoss()
+d_optimizer <span style="color: #333333">=</span> torch<span style="color: #333333">.</span>optim<span style="color: #333333">.</span>Adam(D<span style="color: #333333">.</span>parameters(), lr<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">0.001</span>, betas<span style="color: #333333">=</span>(<span style="color: #6600EE; font-weight: bold">0.5</span>, <span style="color: #6600EE; font-weight: bold">0.999</span>))
+g_optimizer <span style="color: #333333">=</span> torch<span style="color: #333333">.</span>optim<span style="color: #333333">.</span>Adam(G<span style="color: #333333">.</span>parameters(), lr<span style="color: #333333">=</span><span style="color: #6600EE; font-weight: bold">0.001</span>, betas<span style="color: #333333">=</span>(<span style="color: #6600EE; font-weight: bold">0.5</span>, <span style="color: #6600EE; font-weight: bold">0.999</span>))
+</pre></div>
+
+            <br />
+            <hr>
+            <br />
+
+            <h2>Training the Models</h2>
+                <p>
+                    The models are trained together, as they are adversarial. During each training epoch,
+                    the Discriminator is updated once and the Generator twice. After each epoch, the generated images
+                    are saved in png format for later examination. The training lasted for 200 epochs, which took
+                    about 30 minutes in a T4 GPU at the Google Colab environment. The loss per epoch for both models
+                    is shown in Figure 3 below. As expected, the loss per epoch is not a smoothly converging curve,
+                    as the training is adversarial and is a dynamic process. However, the Discriminator's mean loss drops
+                    with each epoch. In Figure 4, the generated images
+                    for a number of epochs are displayed. It is clear that the Generator improved significantly over
+                    the epochs.
+                </p>
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">ones_ <span style="color: #333333">=</span> torch<span style="color: #333333">.</span>ones(batch_size, <span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">.</span>to(device)
+zeros_ <span style="color: #333333">=</span> torch<span style="color: #333333">.</span>zeros(batch_size, <span style="color: #0000DD; font-weight: bold">1</span>)<span style="color: #333333">.</span>to(device)
+
+d_losses <span style="color: #333333">=</span> []
+g_losses <span style="color: #333333">=</span> []
+
+epochs <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">200</span>
+
+<span style="color: #008800; font-weight: bold">for</span> ep <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(epochs):
+  <span style="color: #008800; font-weight: bold">for</span> inputs, _ <span style="color: #000000; font-weight: bold">in</span> data_loader:
+
+    n <span style="color: #333333">=</span> inputs<span style="color: #333333">.</span>size(<span style="color: #0000DD; font-weight: bold">0</span>)
+    inputs <span style="color: #333333">=</span> inputs<span style="color: #333333">.</span>reshape(n, <span style="color: #0000DD; font-weight: bold">784</span>)<span style="color: #333333">.</span>to(device)
+
+    ones <span style="color: #333333">=</span> ones_[:n]
+    zeros <span style="color: #333333">=</span> zeros_[:n]
+
+    real_outputs <span style="color: #333333">=</span> D(inputs)
+    d_loss_real <span style="color: #333333">=</span> criterion(real_outputs, ones)
+
+    noise <span style="color: #333333">=</span> torch<span style="color: #333333">.</span>randn(n, latent_dim)<span style="color: #333333">.</span>to(device)
+    fake_images <span style="color: #333333">=</span> G(noise)
+    fake_outputs <span style="color: #333333">=</span> D(fake_images)
+    d_loss_fake <span style="color: #333333">=</span> criterion(fake_outputs, zeros)
+
+    d_loss <span style="color: #333333">=</span> <span style="color: #6600EE; font-weight: bold">0.5</span> <span style="color: #333333">*</span> (d_loss_real <span style="color: #333333">+</span> d_loss_fake)
+    d_optimizer<span style="color: #333333">.</span>zero_grad()
+    g_optimizer<span style="color: #333333">.</span>zero_grad()
+    d_loss<span style="color: #333333">.</span>backward()
+    d_optimizer<span style="color: #333333">.</span>step()
+
+    <span style="color: #008800; font-weight: bold">for</span> _ <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #0000DD; font-weight: bold">2</span>):
+      noise <span style="color: #333333">=</span> torch<span style="color: #333333">.</span>randn(n, latent_dim)<span style="color: #333333">.</span>to(device)
+      fake_images <span style="color: #333333">=</span> G(noise)
+      fake_outputs <span style="color: #333333">=</span> D(fake_images)
+
+      g_loss <span style="color: #333333">=</span> criterion(fake_outputs, ones)
+
+      d_optimizer<span style="color: #333333">.</span>zero_grad()
+      g_optimizer<span style="color: #333333">.</span>zero_grad()
+      g_loss<span style="color: #333333">.</span>backward()
+      g_optimizer<span style="color: #333333">.</span>step()
+
+    d_losses<span style="color: #333333">.</span>append(d_loss<span style="color: #333333">.</span>item())
+    g_losses<span style="color: #333333">.</span>append(g_loss<span style="color: #333333">.</span>item())
+
+  <span style="color: #008800; font-weight: bold">print</span>(f<span style="background-color: #fff0f0">&#39;Epoch: [ {ep+1} / {epochs}] | D. Loss: {d_loss.item():.4f} | G. Loss: {g_loss.item():.4f}&#39;</span>)
+
+  fake_images <span style="color: #333333">=</span> fake_images<span style="color: #333333">.</span>reshape(<span style="color: #333333">-</span><span style="color: #0000DD; font-weight: bold">1</span>, <span style="color: #0000DD; font-weight: bold">1</span>, <span style="color: #0000DD; font-weight: bold">28</span>, <span style="color: #0000DD; font-weight: bold">28</span>)
+  save_image(scale_image(fake_images), f<span style="background-color: #fff0f0">&#39;gan_images/{ep+1}.png&#39;</span>)
+</pre></div>
+
+                <figure>
+                    <img src="/images/mnistGANs/convergence.png">
+                    <figcaption>Fig. 3 - The loss per epoch for both models.</figcaption>
+                </figure>
+
+                <figure>
+                    <img src="/images/mnistGANs/1.png">
+                    <img src="/images/mnistGANs/20.png">
+                    <img src="/images/mnistGANs/60.png">
+                    <img src="/images/mnistGANs/200.png">
+                    <figcaption>Fig. 4 - The generated images at epochs 1, 20, 60 and 200.</figcaption>
+                </figure>
+            <br />
+            <hr>
+            <br />
+
+            <h2>Testing the Model</h2>
+                <p>
+                    After the training is complete, the GANs system is tested. For the system's testing, 100 images
+                    are generated from noise by the Generator. Then, the generated images are forward-passed through
+                    the Discriminator. The 4 images with the highest outputs (the 4 images that are most real according
+                    to the Discriminator) are shown in Figure 5. As it can be seen, the images are very convincing
+                    and could be easily interpreted as real handwritten digits. 
+
+                </p>
+                <figure>
+                    <img src="/images/mnistGANs/ai-gen-images.png">
+                    <figcaption>Fig. 5 - The best 4 images generated by the GANs system.</figcaption>
+                </figure>
+
+                
+
+            <br />
+            <hr>
+            <br />
+
+            <h2>Jupyter Notebook</h2>
+                <p>
+                    The notebook created for this project is provided below, but can also be found in my Github repository
+                    <a href="https://github.com/TsamisG/MNIST_GANs/tree/main">MNIST_GANs</a>.
+                </p>
+                <div class="container" style="height: 100vh; width: 100%;">
+					<iframe src="/images/mnistGANs/MNIST_GANs.html"
+					style="height: 100%; width: 300%;"></iframe>
+				</div>
+
+            
+            <br />
+            <hr>
+            <br />
+            <h2>References</h2>
+                <p>Goodfellow, I., Pouget-Abadie, J., Mirza, M., Xu, B., Warde-Farley, D., Ozair, S., ... & Bengio, Y. (2014). Generative adversarial nets. In Advances in neural information processing systems (pp. 2672-2680).</p>
+                <p>Aggarwal, C. C. (2019). Neural Networks and Deep Learning: A Textbook (1st ed.). Springer Cham.</p>
+                <p>Kuhn, M., & Johnson, K. (2013). Applied Predictive Modeling. Springer.</p>
+                <p>Goodfellow, I., Bengio, Y., Courville, A., & Bengio, Y. (2016). Deep Learning (Vol. 1). MIT Press Cambridge.</p>
+                <p>Liu, L., Wu, Y., Wei, W., Cao, W., Sahin, S., & Zhang, Q. (2018). Benchmarking Deep Learning Frameworks:
+                    Design Considerations, Metrics and Beyond. 2018 IEEE 38th International Conference on
+                    Distributed Computing Systems (ICDCS), 1258-1269. [doi:10.1109/ICDCS.2018.00125].</p>
+                <p>Wu, Y., Liu, L., Pu, C., Cao, W., Sahin, S., Wei, W., & Zhang, Q. (2019). A Comparative Measurement Study of Deep Learning as a Service Framework. IEEE Transactions on Services Computing, 1-1. [doi:10.1109/TSC.2019.2928551]</p>
+                <p>Wu, Y., Cao, W., Sahin, S., & Liu, L. (2018). Experimental Characterizations and Analysis of Deep Learning Frameworks. 2018 IEEE 38th International Conference on Big Data, December.</p>
+                <p>Pytorch Documentation (<a href="https://pytorch.org/docs/stable/index.html">https://pytorch.org/docs/stable/index.html</a>)</p>
+                
+            
+            <br />
+            <hr>
+            <br />
+
+
+            <a href="/projects.html" class="button">Back to Projects</a>
+            <br />
+            <br />
+	
+	</div>
+
+	</body>
+</html>
